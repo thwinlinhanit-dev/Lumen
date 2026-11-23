@@ -1455,6 +1455,926 @@ export const LESSONS = [
         answer: 1
       }
     ]
+  },
+  /* ======================= phase-1 coverage, physics ======================= */
+  {
+    id: 'phy.p.float', world: 'physics', stage: 'p', instrument: 'push',
+    start: { force: 8, mass: 2 },
+    title: 'Why some things float',
+    beats: [
+      { say: 'The ball sits in water and the corner label already knows its fate. Prediction: how heavy does the ball have to be before it sinks?' },
+      { set: { mass: 0.8 }, hold: 2, say: 'Mass 0.8 — the ball rides high. Under one kilogram per litre, it floats.' },
+      { say: 'Now make it sink without touching Force.', until: { obs: 'density', op: '>=', value: 1.5 }, hint: 'Raise Mass above 1.5.' },
+      { ask: 'A ball of density 0.9 kg/L in water…', options: ['floats', 'sinks', 'dissolves'], answer: 0 },
+      { say: 'Density — mass packed into each litre — is the whole decision. A wooden log floats because wood is less dense than water, not because it is light.' }
+    ]
+  },
+  {
+    id: 'phy.ls.heavy', world: 'physics', stage: 'ls', instrument: 'push',
+    start: { force: 4, mass: 1 },
+    title: 'Same push, heavier ball',
+    beats: [
+      { say: 'Four newtons on one kilogram sends the ball eight metres in two seconds. Now double the mass — predict the distance before you look.' },
+      { set: { mass: 2 }, hold: 3, say: 'Two kilograms, same push. Four metres instead of eight.' },
+      { say: 'Get the two-kilogram ball to at least five metres without changing Mass.', until: { obs: 'distance', op: '>=', value: 5 }, hint: 'Raise Force to 5 — or drop Mass below 1.6.' },
+      { ask: 'Same force, twice the mass. The acceleration is…', options: ['halved', 'doubled', 'unchanged'], answer: 0 },
+      { say: 'a = F/m. The heavy ball is not lazy — the same push is spread over more reluctance to move.' }
+    ]
+  },
+  {
+    id: 'phy.us.newton2', world: 'physics', stage: 'us', instrument: 'push',
+    start: { force: 3, mass: 2 },
+    title: 'F = ma, measured',
+    beats: [
+      { say: 'Three newtons on two kilograms: the readout says three metres in two seconds. Check that against a = F/m before touching anything.' },
+      { say: 'Reach exactly six metres in two seconds.', until: { obs: 'distance', op: '>=', value: 6 }, hint: 'Double the force to 6 — or halve the mass to 1.' },
+      { ask: 'To double the distance at fixed mass you must…', options: ['double the force', 'halve the force', 'double the mass'], answer: 0 },
+      { say: 'That is Newton\'s second law in one line, and this app never drew an arrow it did not compute.' }
+    ]
+  },
+  {
+    id: 'phy.us.mass', world: 'physics', stage: 'us', instrument: 'push',
+    start: { force: 2, mass: 2 },
+    title: 'Twice the mass, half the run',
+    beats: [
+      { say: 'Two newtons on two kilograms: a two-metre run. Prediction: what restores four metres without touching Mass?' },
+      { say: 'Bring the run to four metres without touching Mass.', until: { obs: 'distance', op: '>=', value: 4 }, hint: 'Raise Force to 4.' },
+      { ask: 'Keep the force and double the mass. The distance is…', options: ['half', 'the same', 'a quarter'], answer: 0 },
+      { say: 'Distance over two seconds is 2F/m — mass sits in the denominator. The model is solved, not drawn, so the halving is exact.' }
+    ]
+  },
+  {
+    id: 'phy.us.ten', world: 'physics', stage: 'us', instrument: 'wave',
+    start: { wavelength: 680, slit_separation: 4 },
+    title: 'Ten stripes on the screen',
+    beats: [
+      { say: 'Red light, a narrow gap, a handful of wide stripes. Predict what happens to the count as the slits move apart.' },
+      { say: 'Fit at least ten bright stripes on the screen.', until: { obs: 'bright_fringes', op: '>=', value: 10 }, hint: 'Raise Slit separation toward 12 µm — wider gaps pack narrower stripes; a shorter wavelength helps too.' },
+      { ask: 'Doubling the slit separation makes each stripe…', options: ['half as wide', 'twice as wide', 'unchanged'], answer: 0 },
+      { say: 'Stripe spacing is λL/d: separation sits in the denominator. A wider gap packs the pattern in — the stripes narrow and the count climbs.' }
+    ]
+  },
+  {
+    id: 'phy.uni.ratio', world: 'physics', stage: 'uni', instrument: 'push',
+    start: { force: 2, mass: 2 },
+    title: 'Twice the force, twice the distance',
+    beats: [
+      { say: 'Two newtons on two kilograms: the ball runs two metres. The claim of this lesson is proportionality — distance grows in step with force. Proportional means testable.' },
+      { say: 'Make the distance exactly eight metres.', until: { obs: 'distance', op: '>=', value: 8 }, hint: 'Force 8 — or force 4 with mass 1.' },
+      { ask: 'Force 4 on mass 1 gives the same distance as force 8 on mass 2. Why?', options: ['F/m is equal in both', 'the energy is equal', 'the masses cancel the forces'], answer: 0 },
+      { say: 'Proportionality is what lets an engineer scale a test rig up to the real structure — the ratio is the physics; the numbers are just the scale.' }
+    ]
+  },
+
+  /* ======================= phase-1 coverage, chemistry ======================= */
+  {
+    id: 'chem.p.material', world: 'chem', stage: 'p', instrument: 'chem',
+    start: { atomic_number: 40 },
+    title: 'Every thing is made of elements',
+    beats: [
+      { say: 'The slider picks one of 118 elements, and everything around you is built from these. Prediction: how many different atoms are in a glass of seawater?' },
+      { say: 'Open three different elements.', until: { obs: 'elements_opened', op: '>=', value: 3 }, hint: 'Slide Atomic number — each stop opens an element.' },
+      { ask: 'Water is H₂O. How many elements is that?', options: ['one', 'two', 'three'], answer: 1 },
+      { say: 'Hydrogen and oxygen — two elements, one compound. The table is the parts list for everything.' }
+    ]
+  },
+  {
+    id: 'chem.ls.hunt', world: 'chem', stage: 'ls', instrument: 'chem',
+    start: { atomic_number: 3 },
+    title: 'Six stops around the table',
+    beats: [
+      { say: 'Lithium is element three. A walk along the row crosses a light metal, a gas, and carbon. Prediction: does the pull on electrons rise or fall as you cross a row?' },
+      { say: 'Open six elements, one after another.', until: { obs: 'elements_opened', op: '>=', value: 6 }, hint: 'Slide Atomic number up step by step.' },
+      { ask: 'Across a row, electronegativity generally…', options: ['rises to the right', 'falls to the right', 'stays flat'], answer: 0 },
+      { say: 'The trend, not the list, is the knowledge: protons add up across a row and pull harder on the same shell.' }
+    ]
+  },
+  {
+    id: 'chem.us.count', world: 'chem', stage: 'us', instrument: 'isotopes',
+    start: { atomic_number: 8, neutrons: 4 },
+    title: 'Mass number is a count',
+    beats: [
+      { say: 'Oxygen: eight protons, and this nucleus carries only four neutrons, so it reads mass number twelve. Real oxygen-16 carries eight. Fix it.' },
+      { say: 'Build the nucleus of oxygen-16.', until: { obs: 'mass_number', op: '==', value: 16 }, hint: 'Raise Neutrons to 8.' },
+      { ask: 'Add one more neutron to oxygen-16. The element is…', options: ['still oxygen', 'fluorine', 'nitrogen'], answer: 0 },
+      { say: 'Protons name the element; neutrons only weigh it. Chemical identity survives isotopes because the electrons never knew about the extra ballast.' }
+    ]
+  },
+  {
+    id: 'chem.uni.heavy', world: 'chem', stage: 'uni', instrument: 'isotopes',
+    start: { atomic_number: 92, neutrons: 110 },
+    title: 'Heavy nuclei need a neutron cushion',
+    beats: [
+      { say: 'Uranium, ninety-two protons. A light nucleus is happiest with near-equal numbers; a heavy one is not. Prediction: more or fewer neutrons per proton as elements get heavier?' },
+      { say: 'Stabilise this uranium nucleus to 0.90 or better.', until: { obs: 'stability', op: '>=', value: 0.9 }, hint: 'Raise Neutrons toward 146.' },
+      { ask: 'Why do heavy nuclei want more neutrons than protons?', options: ['Neutrons dilute the proton–proton repulsion', 'Neutrons are heavier', 'Protons attract neutrons strongly'], answer: 0 },
+      { say: 'At 146 neutrons the model reads 0.91 — close to uranium-238, the most common uranium in nature. The trend is real; the score is a teaching rule.' }
+    ]
+  },
+
+  /* ======================= phase-1 coverage, art ======================= */
+  {
+    id: 'art.p.mark', world: 'art', stage: 'p', instrument: 'art',
+    start: { brush: 30 },
+    title: 'A mark is a decision',
+    beats: [
+      { say: 'An empty canvas and one brush. Before you touch it: what makes a mark deliberate rather than scratchy?' },
+      { say: 'Make three strokes you could defend.', until: { obs: 'strokes', op: '>=', value: 3 }, hint: 'Drag across the canvas three times.' },
+      { ask: 'A deliberate mark commits to…', options: ['a place, a size and a value', 'random texture', 'the most detail'], answer: 0 },
+      { say: 'Drawing is not copying; it is a series of decisions. Three honest marks already compose more than a hundred careful scratches.' }
+    ]
+  },
+  {
+    id: 'art.p.cover', world: 'art', stage: 'p', instrument: 'art',
+    start: { brush: 40 },
+    title: 'Fill the shape first',
+    beats: [
+      { say: 'Big shapes first, detail last — that order is why quick sketches read at all. Prediction: how much of the canvas should be decided before any edges?' },
+      { say: 'Cover at least a fifth of the canvas.', until: { obs: 'canvas_covered', op: '>=', value: 20 }, hint: 'Use the big brush in long strokes.' },
+      { ask: 'Blocking in first works because…', options: ['values organise the picture early', 'it hides mistakes', 'detail is unimportant'], answer: 0 },
+      { say: 'Twenty per cent of committed area is already a composition. Detail can only decorate a structure that exists.' }
+    ]
+  },
+  {
+    id: 'art.ls.four', world: 'art', stage: 'ls', instrument: 'art',
+    start: { brush: 20 },
+    title: 'Four values before detail',
+    beats: [
+      { say: 'Three values made a readable drawing at primary. Add a fourth between two of them and watch the form turn.' },
+      { say: 'Paint four distinct values.', until: { obs: 'distinct_values', op: '>=', value: 4 }, hint: 'Add one value between your lightest and darkest.' },
+      { ask: 'The value between light and dark is called…', options: ['the middle tone', 'the outline', 'the highlight'], answer: 0 },
+      { say: 'Each extra distinct value adds a plane the eye can climb. Four is where a drawing starts modelling light instead of listing it.' }
+    ]
+  },
+  {
+    id: 'art.uni.midtone', world: 'art', stage: 'uni', instrument: 'palette',
+    start: { mix_ratio: 85, base_value: 10 },
+    title: 'The middle value carries the picture',
+    beats: [
+      { say: 'Realist paintings live in the middle of the value scale; the extremes are accents. Prediction: where on the 0–100 scale does a well-mixed middle sit?' },
+      { say: 'Mix a value between 40 and 60.', until: { goal: true }, hint: 'Lower Mix ratio toward the middle of the range.' },
+      { ask: 'Why do middle values dominate a representational painting?', options: ['Most surfaces face the light at an angle', 'Mid-grey is fashionable', 'Dark pigment is cheaper'], answer: 0 },
+      { say: 'Form turns in the middle values; the darkest dark and the lightest light are punctuation. Squint at any older painting and count.' }
+    ]
+  },
+
+  /* ======================= phase-1 coverage, music ======================= */
+  {
+    id: 'mus.p.taps', world: 'music', stage: 'p', instrument: 'music',
+    start: { tempo: 96 },
+    title: 'A count you can feel',
+    beats: [
+      { say: 'Free play, a slower tempo. Tap keys freely — but every tap lands inside the count the tempo sets. Prediction: what does 96 bpm actually change?' },
+      { say: 'Play at least ten notes.', until: { obs: 'notes_played', op: '>=', value: 10 }, hint: 'Tap keys — the counter tracks every note.' },
+      { ask: 'Tempo changes…', options: ['how fast the beats pass', 'which notes are allowed', 'the pitch of the keys'], answer: 0 },
+      { say: 'A pulse is a habit, not a rule. At 96 bpm one beat is 0.625 s — slower, and the gap between your taps becomes audible.' }
+    ]
+  },
+  {
+    id: 'mus.ls.chords', world: 'music', stage: 'ls', instrument: 'music',
+    start: { tempo: 140 },
+    title: 'I, IV, V — the spine',
+    beats: [
+      { say: 'Three chords run most of the songs you know: I, IV, V. Prediction: how many notes does each chord sound at once?' },
+      { say: 'Play the I, then IV, then V chord in Free play.', until: { obs: 'notes_played', op: '>=', value: 9 }, hint: 'Switch to Free play, then three chords of three notes each — nine.' },
+      { ask: 'The V chord pulls hardest back to I because…', options: ['it sits right below it in the scale', 'it is louder', 'it has the most notes'], answer: 0 },
+      { say: 'Nine notes, three functions: home, away, push. Harmony is a small vocabulary used with conviction.' }
+    ]
+  },
+  {
+    id: 'mus.us.faster', world: 'music', stage: 'us', instrument: 'music',
+    start: { tempo: 168 },
+    title: 'The same phrase, faster',
+    beats: [
+      { say: 'The eight-note phrase you played at 120 bpm, now at 168. The notes are identical; the skill is not.' },
+      { say: 'Switch to Practice and play the phrase in order at the new tempo.', until: { goal: true }, hint: 'Practice mode, then the eight keys in order.' },
+      { ask: 'Playing faster mainly demands…', options: ['tighter anticipation of the next note', 'a different phrase', 'louder playing'], answer: 0 },
+      { say: 'Tempo scales the same melody the way a stage scales the same problem. The phrase is the invariant; the rate is the challenge.' }
+    ]
+  },
+  {
+    id: 'mus.uni.fifth', world: 'music', stage: 'uni', instrument: 'tuning',
+    start: { note_frequency: 250, reference: 500 },
+    title: 'The fifth is a ratio',
+    beats: [
+      { say: 'A just fifth above 500 Hz lives at 750. Prediction: what will the cents readout say there?' },
+      { set: { reference: 500 }, hold: 1, say: 'Reference 500. Now find the fifth above it.' },
+      { say: 'Land the note on the just fifth above the reference.', until: { obs: 'cents_off', op: '==', value: 702 }, hint: 'Raise Note frequency to 750 — the readout stops at 702.0 cents.' },
+      { ask: '702 cents means the frequency ratio is…', options: ['3:2', '2:1', '9:8'], answer: 0 },
+      { say: 'Cents are a ruler for ratios: 700 cents is the equal-tempered fifth, 702 the just one — two cents of purity, heard as stillness instead of beating.' }
+    ]
+  },
+
+  /* ======================= phase-1 coverage, earth ======================= */
+  {
+    id: 'earth.p.place', world: 'earth', stage: 'p', instrument: 'earth',
+    start: { year: 1950 },
+    title: 'Two places, one planet',
+    beats: [
+      { say: 'A spinning globe, any year you like. Every country is a dossier: the place, at the year, with what was true then. Prediction: does the dossier change if you only spin the globe?' },
+      { say: 'Open any two countries.', until: { obs: 'countries_opened', op: '>=', value: 2 }, hint: 'Tap two countries on the globe.' },
+      { ask: 'The dossier changes when…', options: ['you change the year', 'you spin the globe', 'you zoom in'], answer: 0 },
+      { say: 'The same country at two different years reads differently. A border is a claim with a date on it.' }
+    ]
+  },
+  {
+    id: 'earth.ls.five', world: 'earth', stage: 'ls', instrument: 'earth',
+    start: { year: 2000 },
+    title: 'Five dossiers build a region',
+    beats: [
+      { say: 'One country is a story; five begin to be a pattern. Prediction: what can five neighbouring dossiers show that one cannot?' },
+      { say: 'Open five countries.', until: { obs: 'countries_opened', op: '>=', value: 5 }, hint: 'Work along one coast or one border region.' },
+      { ask: 'Five dossiers in one region can show…', options: ['shared history and trade', 'nothing new', 'only area'], answer: 0 },
+      { say: 'Geography compiles: single places are anecdotes, sets of places are evidence.' }
+    ]
+  },
+  {
+    id: 'earth.us.migrate', world: 'earth', stage: 'us', instrument: 'earth',
+    start: { year: 2010 },
+    title: 'Rewind the dossier',
+    beats: [
+      { say: 'Open a country at today\'s date, then drag the year back. Borders, names and rulers are all dated. Prediction: how far back before today\'s borders stop making sense?' },
+      { say: 'Open a country, then set the timeline back to 1900.', until: { obs: 'timeline', op: '<=', value: 1900 }, hint: 'Drag Year back to 1900.' },
+      { ask: 'A 1900 dossier of the same place looks different because…', options: ['the data is dated, not timeless', 'old maps were worse', 'countries did not exist'], answer: 0 },
+      { say: 'The timeline is not decoration: geography is a stack of dated claims, and every layer has its own truth.' }
+    ]
+  },
+  {
+    id: 'earth.uni.atlas', world: 'earth', stage: 'uni', instrument: 'earth',
+    start: { year: 1990 },
+    title: 'Patterns need many points',
+    beats: [
+      { say: 'Six opened countries is no longer sightseeing; it is a dataset. Prediction: what claim could six dossiers support that two cannot?' },
+      { say: 'Open six countries.', until: { obs: 'countries_opened', op: '>=', value: 6 }, hint: 'Keep the year fixed so the dossiers stay comparable.' },
+      { ask: 'Comparability in a dataset requires…', options: ['a shared date for all rows', 'the same area', 'the same language'], answer: 0 },
+      { say: 'Hold the year constant and the dossiers become a table. Geography\'s argument starts where the table begins.' }
+    ]
+  },
+
+  /* ======================= phase-1 coverage, cs ======================= */
+  {
+    id: 'cs.p.sequence', world: 'cs', stage: 'p', instrument: 'sort',
+    start: { array_size: 8, steps_per_frame: 12 },
+    title: 'One step after another',
+    beats: [
+      { say: 'A tiny array of eight, running fast. Watch one pair of bars: comparison, swap, next pair. Prediction: how many comparisons will eight items need?' },
+      { say: 'Let the lane finish — at least twenty-four comparisons.', until: { obs: 'comparisons_bubble', op: '>=', value: 24 }, hint: 'Raise Steps per frame to fast-forward.' },
+      { ask: 'Each pass of bubble sort…', options: ['compares neighbours and swaps if needed', 'picks the smallest first', 'splits the array in half'], answer: 0 },
+      { say: 'An algorithm is a sequence of tiny decisions. Watched at speed, the sequence is the program.' }
+    ]
+  },
+  {
+    id: 'cs.ls.loop', world: 'cs', stage: 'ls', instrument: 'sort',
+    start: { array_size: 10, steps_per_frame: 12 },
+    title: 'How many times?',
+    beats: [
+      { say: 'Ten items this time. The lane makes passes until nothing moves. Prediction: passes times items is roughly what?' },
+      { say: 'Count forty comparisons.', until: { obs: 'comparisons_bubble', op: '>=', value: 40 }, hint: 'Let it run to the end — ten items need forty-five.' },
+      { ask: 'Bubble sort on n items makes about…', options: ['n²/2 comparisons', 'n comparisons', 'log n comparisons'], answer: 0 },
+      { say: 'The loop count is the cost. Forty-five comparisons for ten items is the arithmetic behind "slow for large n".' }
+    ]
+  },
+  {
+    id: 'cs.us.halves', world: 'cs', stage: 'us', instrument: 'sort',
+    start: { array_size: 16, steps_per_frame: 6 },
+    title: 'Doubling n, quadrupling the work',
+    beats: [
+      { say: 'Sixteen items: about 120 comparisons. Double the array and predict the count — twice as many, or four times?' },
+      { say: 'Run thirty-two items and watch the counter pass 120.', until: { obs: 'comparisons_bubble', op: '>=', value: 120 }, hint: 'Raise Array size to 32, and Steps per frame to speed it up.' },
+      { ask: 'Going from 16 to 32 items multiplies the comparisons by…', options: ['about four', 'about two', 'about eight'], answer: 0 },
+      { say: 'That quadratic growth is the whole argument for the better algorithms later in this world.' }
+    ]
+  },
+
+  /* ======================= phase-1 coverage, language ======================= */
+  {
+    id: 'lang.p.greet', world: 'language', stage: 'p', instrument: 'language',
+    start: { voice_speed: 0.6 },
+    title: 'Say who you are',
+    beats: [
+      { say: 'The sentence is scrambled and the voice reads slowly. Prediction: which word has to come first — the verb, or the one doing it?' },
+      { say: 'Build one full sentence.', until: { obs: 'sentences_solved', op: '>=', value: 1 }, hint: 'Tap the tiles in order — subject, verb, rest.' },
+      { ask: 'The verb\'s ending often tells you…', options: ['who is doing it', 'where it happens', 'how long it takes'], answer: 0 },
+      { say: 'Slow speech buys thinking time. Order carries the grammar; the ending confirms it.' }
+    ]
+  },
+  {
+    id: 'lang.ls.four', world: 'language', stage: 'ls', instrument: 'language',
+    start: { voice_speed: 0.7 },
+    title: 'Four sentences, one habit',
+    beats: [
+      { say: 'One clean sentence is luck. Four in a row is a habit. Prediction: what breaks most often — the order, or a repeated word?' },
+      { say: 'Solve four sentences.', until: { obs: 'sentences_solved', op: '>=', value: 4 }, hint: 'Same order every time: subject, verb, rest.' },
+      { ask: 'A mistake in tile order usually comes from…', options: ['translating word by word', 'reading too slowly', 'too many nouns'], answer: 0 },
+      { say: 'Fluency is a pattern repeated until it stops being deliberate.' }
+    ]
+  },
+  {
+    id: 'lang.us.reading', world: 'language', stage: 'us', instrument: 'pace',
+    start: { words_per_minute: 120 },
+    title: 'A text, unglossed, at speed',
+    beats: [
+      { say: 'A hundred-word passage at 120 words per minute — fifty seconds of reading. Prediction: what does reading faster cost, and what does it not touch?' },
+      { say: 'Bring the reading time under forty-one seconds.', until: { obs: 'reading_seconds', op: '<', value: 40.5 }, hint: 'Raise Words per minute to 150 or more.' },
+      { ask: 'Reading speed changes…', options: ['the rate, not the words', 'the word order', 'the vocabulary'], answer: 0 },
+      { say: 'The pace band is a label, not a score: at 150 wpm you cross into the band most fluent readers live in.' }
+    ]
+  },
+
+  /* ======================= phase-1 coverage, astro ======================= */
+  {
+    id: 'astro.p.wander', world: 'astro', stage: 'p', instrument: 'astro',
+    start: { time: 2 },
+    title: 'The planets wander',
+    beats: [
+      { say: 'The clock runs and each planet moves at its own rate. Prediction: which completes a lap first — an inner planet or an outer one?' },
+      { say: 'Let at least two Earth years pass.', until: { obs: 'earth_years', op: '>=', value: 2 }, hint: 'Raise Time to speed the clock.' },
+      { ask: 'After one Earth year, an inner planet has…', options: ['completed more than one orbit', 'completed less than one', 'not moved'], answer: 0 },
+      { say: 'Kepler\'s third law in one glance: closer to the Sun, faster lap. Distance sets the period.' }
+    ]
+  },
+  {
+    id: 'astro.ls.solar', world: 'astro', stage: 'ls', instrument: 'astro',
+    start: { time: 1 },
+    title: 'Forty years in a few seconds',
+    beats: [
+      { say: 'The time slider is a year-machine. At this scale the planets are brushes painting ellipses. Prediction: where is Neptune after forty Earth years?' },
+      { say: 'Run the clock through forty Earth years.', until: { obs: 'earth_years', op: '>=', value: 40 }, hint: 'Raise Time and watch the Earth-year counter.' },
+      { ask: 'Forty Earth years is, for Neptune, roughly…', options: ['a quarter of one orbit', 'two orbits', 'forty orbits'], answer: 0 },
+      { say: 'The outer planets are patient: Neptune needs about 165 of our years per lap.' }
+    ]
+  },
+  {
+    id: 'astro.us.inner', world: 'astro', stage: 'us', instrument: 'astro',
+    start: { time: 2 },
+    title: 'The inner four are a sprint',
+    beats: [
+      { say: 'Mercury laps in weeks; Mars takes about two of our years. Prediction: how many inner-planet laps fit inside one Earth decade?' },
+      { say: 'Run eight Earth years.', until: { obs: 'earth_years', op: '>=', value: 8 }, hint: 'Raise Time and watch the inner planets lap repeatedly.' },
+      { ask: 'The pattern you just watched is…', options: ['inner planets complete more orbits in the same time', 'all planets keep pace', 'outer planets speed up later'], answer: 0 },
+      { say: 'Distance sets the period — the same law, seen at the fast end of the scale.' }
+    ]
+  },
+  {
+    id: 'astro.uni.calendar', world: 'astro', stage: 'uni', instrument: 'moon',
+    start: { phase_angle: 45 },
+    title: 'The Moon keeps a 29.5-day month',
+    beats: [
+      { say: 'Phase angle 45°, cycle day 3.7. The cycle maps angle onto days at 29.5 days per turn. Prediction: what angle reads as a full month?' },
+      { say: 'Sweep the cycle past day 29.', until: { obs: 'cycle_day', op: '>=', value: 29 }, hint: 'Raise Phase angle toward 360.' },
+      { ask: 'One full cycle of phases is…', options: ['29.5 days — one synodic month', '365 days', '7 days'], answer: 0 },
+      { say: 'The synodic month is why a "month" is what it is: the Moon\'s phases were humanity\'s first calendar.' }
+    ]
+  },
+
+  /* ======================= phase-1 coverage, biology ======================= */
+  {
+    id: 'bio.p.living', world: 'bio', stage: 'p', instrument: 'bio',
+    start: { selection_strength: 0.4 },
+    title: 'A population is always changing',
+    beats: [
+      { say: 'Every dot is an individual; the counter counts generations. Prediction: does the population stop changing if you leave it alone?' },
+      { say: 'Watch twelve generations pass.', until: { obs: 'generation', op: '>=', value: 12 }, hint: 'Wait — or nudge Selection strength and watch it respond.' },
+      { ask: 'Each generation is different because…', options: ['mutation keeps adding variation', 'the dots get tired', 'the optimum moves by itself'], answer: 0 },
+      { say: 'A population is a process, not a picture. Twelve generations happened while you watched.' }
+    ]
+  },
+  {
+    id: 'bio.ls.raw', world: 'bio', stage: 'ls', instrument: 'bio',
+    start: { mutation_rate: 0.08 },
+    title: 'Variation is raw material',
+    beats: [
+      { say: 'Mutation is turned well up, so the spread will not sit still. Prediction: what does that do to selection\'s job?' },
+      { say: 'Run twenty-five generations at this mutation rate.', until: { obs: 'generation', op: '>=', value: 25 }, hint: 'Let it run — watch the spread refuse to collapse.' },
+      { ask: 'More mutation means…', options: ['more variation for selection to work on', 'always worse survival', 'no change in spread'], answer: 0 },
+      { say: 'Selection needs something to select. Mutation supplies it, generation after generation.' }
+    ]
+  },
+  {
+    id: 'bio.us.carrier', world: 'bio', stage: 'us', instrument: 'genetics',
+    start: { allele_from_a: 1, allele_from_b: 1 },
+    title: 'One of each',
+    beats: [
+      { say: 'Both parents pass A: every box reads AA and the dominant fraction sits at one. Prediction: what changes if one parent passes a instead?' },
+      { say: 'Make half the boxes mixed.', until: { obs: 'heterozygous_fraction', op: '==', value: 0.5 }, hint: 'Lower Allele from B to a.' },
+      { ask: 'A learner who shows the dominant trait could carry…', options: ['only AA', 'AA or Aa', 'only Aa'], answer: 1 },
+      { say: 'Half the boxes look dominant and hold a hidden a. That is a carrier in numbers — the trait shows, the allele hides.' }
+    ]
+  },
+  {
+    id: 'bio.uni.fixation', world: 'bio', stage: 'uni', instrument: 'genetics',
+    start: { allele_from_a: 1, allele_from_b: 0 },
+    title: 'Why alleles fix',
+    beats: [
+      { say: 'Start mixed: A from one parent, a from the other. Three of four boxes carry A. Prediction: what does the square read when both parents pass A?' },
+      { say: 'Push the dominant fraction to exactly one.', until: { obs: 'dominant_fraction', op: '==', value: 1 }, hint: 'Raise Allele from B to A.' },
+      { ask: 'In a population, "fixed" means…', options: ['only one allele remains', 'all individuals are identical', 'mutation has stopped'], answer: 0 },
+      { say: 'Fixation is the square\'s edge case and a population\'s loss: when one allele is all that is left, the other\'s possibilities are gone.' }
+    ]
+  },
+
+  /* ======================= phase-1 coverage, statistics ======================= */
+  {
+    id: 'stats.p.chart', world: 'stats', stage: 'p', instrument: 'stats',
+    start: { sample_size_n: 12 },
+    title: 'Which pile is bigger',
+    beats: [
+      { say: 'Bars grow as samples land, and the white curve predicts where they should pile up. Prediction: does the pile\'s centre wander much?' },
+      { say: 'Draw thirty samples.', until: { obs: 'samples_drawn', op: '>=', value: 30 }, hint: 'Raise Samples per frame.' },
+      { ask: 'Each sample mean is computed from…', options: ['n measurements', 'one measurement', 'all of history'], answer: 0 },
+      { say: 'Small piles jump, big piles agree — the beginning of every claim statistics makes.' }
+    ]
+  },
+  {
+    id: 'stats.ls.n', world: 'stats', stage: 'ls', instrument: 'stats',
+    start: { sample_size_n: 5, samples_per_frame: 2 },
+    title: 'Five at a time, forty times',
+    beats: [
+      { say: 'Five measurements per sample, two samples a second. Prediction: which moves more — the pile of means, or the predicted curve?' },
+      { say: 'Accumulate forty samples.', until: { obs: 'samples_drawn', op: '>=', value: 40 }, hint: 'Raise Samples per frame to speed the pile up.' },
+      { ask: 'The white curve\'s position comes from…', options: ['the population\'s known mean and spread', 'the bars themselves', 'a fitted line'], answer: 0 },
+      { say: 'Prediction before measurement: the curve is computed from σ/√n, and the bars obey it.' }
+    ]
+  },
+  {
+    id: 'stats.us.detect', world: 'stats', stage: 'us', instrument: 'hypothesis',
+    start: { hypothesised_mean: 45, true_mean: 50 },
+    title: 'How big a gap counts',
+    beats: [
+      { say: 'Hypothesis 45, true mean 50 — a five-point gap, not yet detectable. Prediction: which slider should move to make the gap decisive?' },
+      { say: 'Make the difference detectable.', until: { obs: 'detectable', op: '>=', value: 1 }, hint: 'Lower Hypothesised mean to 40 — a ten-point gap.' },
+      { ask: '"Detectable" here means…', options: ['two standard errors or more', 'the bars touched', 'the mean moved'], answer: 0 },
+      { say: 'A test does not ask "is it different?" but "is the gap too big to blame on noise?"' }
+    ]
+  },
+  {
+    id: 'stats.uni.doubt', world: 'stats', stage: 'uni', instrument: 'hypothesis',
+    start: { hypothesised_mean: 55, true_mean: 70 },
+    title: 'How sure is too sure',
+    beats: [
+      { say: 'Fifteen points of gap is three standard errors, and the flag calls it detectable. Prediction: how close can the hypothesis creep before doubt returns?' },
+      { say: 'Bring the hypothesis toward the truth until the flag drops.', until: { obs: 'detectable', op: '<', value: 1 }, hint: 'Raise Hypothesised mean past 60 — a gap under ten points.' },
+      { ask: 'On this scale, the standard-error count shrinks as…', options: ['the measured gap shrinks', 'samples grow', 'the mean moves'], answer: 0 },
+      { say: 'Significance is a dial on the gap, not a stamp of truth. Every point toward the truth spends a fifth of a standard error here.' }
+    ]
+  },
+
+  /* ======================= phase-1 coverage, climate ======================= */
+  {
+    id: 'cli.p.blanket', world: 'climate', stage: 'p', instrument: 'balance',
+    start: { emissivity_lower_traps_more: 0.65 },
+    title: 'Lower ε, warmer world',
+    beats: [
+      { say: 'The readout starts near ten degrees — colder than usual, because ε starts above the world\'s normal 0.61. Prediction: which way is warm?' },
+      { say: 'Bring the surface back above fourteen degrees.', until: { obs: 'surface', op: '>=', value: 14 }, hint: 'Lower Emissivity toward 0.61.' },
+      { ask: 'Emissivity measures the atmosphere\'s…', options: ['willingness to radiate heat away', 'reflectivity', 'mass'], answer: 0 },
+      { say: 'Lower ε means the surface must run hotter to shed the same sunlight. That is the greenhouse effect in one slider.' }
+    ]
+  },
+  {
+    id: 'cli.ls.solar', world: 'climate', stage: 'ls', instrument: 'balance',
+    start: { solar_output: 1.1 },
+    title: 'A dimmer sun',
+    beats: [
+      { say: 'Start ten per cent brighter than today — about twenty-two degrees. Prediction: how much dimmer before the planet struggles?' },
+      { say: 'Bring equilibrium down to twelve degrees or less.', until: { obs: 'equilibrium', op: '<=', value: 12 }, hint: 'Lower Solar output toward 0.95.' },
+      { ask: 'Dimming the sun by five per cent moves the planet…', options: ['several degrees colder', 'about one degree', 'not at all'], answer: 0 },
+      { say: 'Solar output is the budget\'s income line. A younger Sun really was dimmer — the faint-young-Sun puzzle — and the balance had to differ.' }
+    ]
+  },
+  {
+    id: 'cli.us.radiate', world: 'climate', stage: 'us', instrument: 'balance',
+    start: { emissivity_lower_traps_more: 0.55 },
+    title: 'A good radiator is cold',
+    beats: [
+      { say: 'ε at 0.55 traps a lot: the readout is well over twenty degrees. Prediction: what happens to temperature as the planet becomes a better radiator?' },
+      { say: 'Push equilibrium to zero degrees or below.', until: { obs: 'equilibrium', op: '<=', value: 0 }, hint: 'Raise Emissivity past 0.76.' },
+      { ask: 'Raising ε moves radiated power…', options: ['up, so the surface must cool to balance', 'down, so the surface warms', 'nowhere'], answer: 0 },
+      { say: 'Balance is mandatory: in equals out. Change one side and the other follows — temperature is how the planet pays.' }
+    ]
+  },
+  {
+    id: 'cli.uni.forcing', world: 'climate', stage: 'uni', instrument: 'balance',
+    start: { solar_output: 0.95, emissivity_lower_traps_more: 0.65 },
+    title: 'Two knobs, one sum',
+    beats: [
+      { say: 'A dimmer sun and a leaky atmosphere: the readout starts well below today. Prediction: what combination returns the planet to modern warmth?' },
+      { say: 'Reach eighteen degrees or more.', until: { obs: 'equilibrium', op: '>=', value: 18 }, hint: 'Raise Solar output past 1.02 and lower Emissivity below 0.59.' },
+      { ask: 'Two forcings applied in the same direction…', options: ['add together', 'cancel exactly', 'reduce to whichever is larger'], answer: 0 },
+      { say: 'That is what "forcing" means in climate science: separately quantified pushes on one balance. This model adds them; real models also add feedbacks.' }
+    ]
+  },
+
+  /* ======================= phase-1 coverage, eng / finance / maths ======================= */
+  {
+    id: 'eng.us.truss', world: 'eng', stage: 'us', instrument: 'eng',
+    start: { bottom_chord: 120, top_chord: 100, diagonals: 80 },
+    title: 'Triangles carry the load',
+    beats: [
+      { say: 'A lean bridge: 120, 100 and 80 mm², carrying twenty kilonewtons. Prediction: which member decides whether this stands?' },
+      { say: 'Get the factor of safety to 2.5 or better.', until: { obs: 'factor_of_safety', op: '>=', value: 2.5 }, hint: 'Spend on the bottom chord — it works hardest.' },
+      { ask: 'The triangle matters because a triangle…', options: ['cannot change shape without stretching a member', 'uses less paint', 'looks stronger'], answer: 0 },
+      { say: 'The solve is real: eighteen equations answered every time you moved a slider. Triangles are the geometry that keeps those equations honest.' }
+    ]
+  },
+  {
+    id: 'fin.p.five', world: 'finance', stage: 'p', instrument: 'shop',
+    start: { budget: 12 },
+    title: 'Five things, still under budget',
+    beats: [
+      { say: 'Twelve dollars and a shelf of five goods. Prediction: how many items can the basket hold before the change runs out?' },
+      { say: 'Buy at least five items within budget.', until: { obs: 'items_bought', op: '>=', value: 5 }, hint: 'Tap a cheap item five times — or fill the basket your own way.' },
+      { ask: 'Staying in budget means…', options: ['the money spent is at most the budget', 'buying only one kind of thing', 'counting the prices after paying'], answer: 0 },
+      { say: 'Arithmetic you can feel: every tap adds a price to a running total. That habit is what a bank balance is.' }
+    ]
+  },
+  {
+    id: 'mat.ls.ratio', world: 'maths', stage: 'ls', instrument: 'blocks',
+    start: { objects: 10, groups: 5 },
+    title: 'Ratios are sharing rules',
+    beats: [
+      { say: 'Ten things, five groups. Before you place anything: how many per group keeps every group even?' },
+      { say: 'Place every object so no group is bigger than another.', until: { obs: 'per_group', op: '>=', value: 2 }, hint: 'Set Groups to 5, then tap every dot into a group.' },
+      { ask: 'Ten into five gives two each. Twelve into five gives…', options: ['two, with two left over', 'exactly two', 'three each'], answer: 0 },
+      { say: 'A ratio is a sharing rule that may leave a remainder — and the remainder is where fractions come from.' }
+    ]
+  },
+  /* ======================= phase-1 completion, physics ======================= */
+  {
+    id: 'phy.p.newton1', world: 'physics', stage: 'p', instrument: 'push',
+    start: { force: 4, mass: 1 },
+    title: 'Nothing changes on its own',
+    beats: [
+      { say: 'The ball is running and something keeps feeding it. Prediction: what does the readout do if you take the push away completely?' },
+      { say: 'Set Force to zero and watch the run.', until: { obs: 'distance', op: '<=', value: 0.1 }, hint: 'Drag Force all the way down to 0.' },
+      { ask: 'Newton\u2019s first law says a ball with no net push\u2026', options: ['keeps its velocity', 'slows to a stop', 'reverses'], answer: 0 },
+      { say: 'In the readout\u2019s language: nothing added, nothing gained. In the world: a coasting ball keeps coasting \u2014 friction, not nature, is what stops it.' }
+    ]
+  },
+  {
+    id: 'phy.ls.two', world: 'physics', stage: 'ls', instrument: 'push',
+    start: { force: 3, mass: 1 },
+    title: 'Two ways to the same run',
+    beats: [
+      { say: 'Force 3 on 1 kilogram runs six metres. Prediction: can a heavier ball run six metres too \u2014 with the right recipe?' },
+      { say: 'With Mass at two kilograms, get the same six-metre run.', until: { obs: 'distance', op: '==', value: 6 }, hint: 'With Mass at 2, raise Force to 6.' },
+      { ask: 'Force 6 on mass 2 and force 3 on mass 1 give\u2026', options: ['the same distance', 'different distances', 'no distance'], answer: 0 },
+      { say: 'Many recipes, one outcome. That is what an equation means: every pair that divides the same way lands in the same place.' }
+    ]
+  },
+  {
+    id: 'phy.uni.energy', world: 'physics', stage: 'uni', instrument: 'push',
+    start: { force: 2, mass: 1 },
+    title: 'Work becomes energy',
+    beats: [
+      { say: 'The push does work \u2014 force times distance. Prediction: how fast is the ball moving when the work ledger and the speed agree?' },
+      { say: 'Double the work: get the run to eight metres.', until: { obs: 'distance', op: '>=', value: 8 }, hint: 'Raise Force to 4 \u2014 work grows with the distance it covers.' },
+      { say: 'Force 4 over 8 metres is 32 joules on 1 kilogram \u2014 and \u00bdmv\u00b2 with v = 8 m/s is \u00bd \u00b7 64 = 32. The ledger and the readout agree to the joule.' },
+      { ask: 'Force 2 on mass 1 runs 4 m. The work done is\u2026', options: ['8 J', '4 J', '16 J'], answer: 0 },
+      { say: 'Same bookkeeping everywhere: the effort times the distance it acted over is what the motion keeps. That is the conservation law in miniature.' }
+    ]
+  },
+
+  /* ======================= phase-1 completion, maths ======================= */
+  {
+    id: 'mat.p.count', world: 'maths', stage: 'p', instrument: 'blocks',
+    start: { objects: 12, groups: 3 },
+    title: 'Count, group and compare',
+    beats: [
+      { say: 'Twelve dots, three baskets. Prediction: how many does a fair share put in each?' },
+      { say: 'Make every basket hold the same number.', until: { obs: 'per_group', op: '==', value: 4 }, hint: 'Tap a dot to move it into a group \u2014 twelve split three ways is four each.' },
+      { ask: 'Twelve dots in three equal baskets is the same fact as\u2026', options: ['3 \u00d7 4 = 12', '12 \u2212 3 = 9', '12 + 3 = 15'], answer: 0 },
+      { say: 'Counting, grouping and comparing are one skill wearing three hats \u2014 and multiplication is just the fair share read backwards.' }
+    ]
+  },
+
+  /* ======================= phase-1 completion, engineering ======================= */
+  {
+    id: 'eng.ls.triangle', world: 'eng', stage: 'ls', instrument: 'eng',
+    start: { bottom_chord: 120, top_chord: 100, diagonals: 80 },
+    title: 'Triangles do not fold',
+    beats: [
+      { say: 'Every member thinned, and the bridge still stands. Prediction: which part fails first if the load grows?' },
+      { say: 'Get the factor of safety to 2.0 or better.', until: { obs: 'factor_of_safety', op: '>=', value: 2 }, hint: 'Widen the bottom chord first \u2014 it works hardest.' },
+      { ask: 'A square frame with one diagonal, versus one with none: the braced frame\u2026', options: ['cannot change shape without stretching', 'folds first', 'carries less'], answer: 0 },
+      { say: 'A triangle is the only polygon locked by its own sides. Trusses are just triangles agreeing to hold each other.' }
+    ]
+  },
+
+  /* ======================= phase-1 completion, finance ======================= */
+  {
+    id: 'fin.ls.percent', world: 'finance', stage: 'ls', instrument: 'shop',
+    start: { budget: 20 },
+    title: 'Ten per cent of what?',
+    beats: [
+      { say: 'Twenty dollars in the pocket. Prediction: what fraction of it does one $2.40 bread take?' },
+      { say: 'Spend at least eight dollars \u2014 then read Spent as a slice of the budget.', until: { obs: 'spent', op: '>=', value: 8 }, hint: 'Cheese, coffee and bread together clear $8.' },
+      { ask: '$8 spent of $20 is\u2026', options: ['40%', '80%', '8%'], answer: 0 },
+      { say: 'A percentage always answers "of what?". The budget is the whole; every receipt is a slice of it \u2014 read the two together or the number lies.' }
+    ]
+  },
+  {
+    id: 'fin.uni.seventy', world: 'finance', stage: 'uni', instrument: 'chart',
+    start: { annual_return: 4 },
+    title: 'Where 72 comes from',
+    beats: [
+      { say: 'The rule of 72 says a 4% return doubles in 18 years. Prediction: what does the exact arithmetic say?' },
+      { say: 'Halve the doubling time: get it under nine years.', until: { obs: 'years_to_double', op: '<=', value: 9 }, hint: 'Raise Annual return past 8% \u2014 72 \u00f7 8 is 9.' },
+      { say: 'Exact doubling time is ln 2 \u00f7 ln(1 + r). At 8% that is 8.04 years; 72/8 says 9. The shortcut is a logarithm wearing a friendly hat.' },
+      { ask: 'The exact doubling time of a rate r is\u2026', options: ['72 \u00f7 r', 'ln 2 \u00f7 ln(1 + r)', 'r \u00f7 2'], answer: 1 },
+      { say: 'Use 72 to think, use the logarithm to check \u2014 and know which one you are holding.' }
+    ]
+  },
+
+  /* ======================= phase-1 completion, language ======================= */
+  {
+    id: 'lang.uni.question', world: 'language', stage: 'uni', instrument: 'language',
+    start: { voice_speed: 1.1 },
+    title: 'The question mark arrives first',
+    beats: [
+      { say: 'One of the four prompts is a question. Spanish announces it before the first word \u2014 predict how.' },
+      { say: 'Tap Next until the prompt asks where the library is, then build it with no wrong tile.', until: { obs: 'sentences_solved', op: '>=', value: 1 }, hint: '\u00bf Question word first, then verb \u2014 the tiles lock in order.' },
+      { ask: 'In Spanish, a question is signalled\u2026', options: ['by the opening \u00bf, before any word', 'only by voice tone', 'by a question word at the end'], answer: 0 },
+      { say: 'Word order does the grammar; the upside-down mark does the warning. Written Spanish shows the road sign before the turn.' }
+    ]
+  },
+  {
+    id: 'lang.uni.agree', world: 'language', stage: 'uni', instrument: 'language',
+    start: { voice_speed: 0.6 },
+    title: 'Endings do double duty',
+    beats: [
+      { say: '"Comemos" is one word for "we eat". Prediction: how much grammar can one ending carry?' },
+      { say: 'Build the bread sentence with no wrong tile.', until: { obs: 'clean_runs', op: '>=', value: 1 }, hint: 'Nosotros comemos pan todos los d\u00edas \u2014 subject, verb, rest.' },
+      { ask: 'The ending "-emos" encodes\u2026', options: ['who acts', 'when it happens', 'who acts and when'], answer: 2 },
+      { say: 'One suffix, two facts: the person and the tense. English spends three words; Spanish spends one ending \u2014 that is why the tiles lock.' }
+    ]
+  },
+
+  /* ======================= phase-1 completion, cs ======================= */
+  {
+    id: 'cs.p.repeat', world: 'cs', stage: 'p', instrument: 'sort',
+    start: { array_size: 8, steps_per_frame: 2 },
+    title: 'Doing it again and again',
+    beats: [
+      { say: 'One bubble pass is one tiny decision, repeated. Prediction: how many comparisons does a single pass over eight items make?' },
+      { say: 'Watch the counter reach seven.', until: { obs: 'comparisons_bubble', op: '>=', value: 7 }, hint: 'One pass over eight items compares seven neighbouring pairs.' },
+      { ask: 'A full pass over eight adjacent pairs compares\u2026', options: ['eight pairs', 'seven pairs', 'one pair'], answer: 1 },
+      { say: 'The loop is the algorithm: compare, maybe swap, step, repeat. Everything else in computing is this shape wearing different clothes.' }
+    ]
+  },
+  {
+    id: 'cs.uni.invariant', world: 'cs', stage: 'uni', instrument: 'sort',
+    start: { array_size: 12, steps_per_frame: 8 },
+    title: 'The sorted prefix stays sorted',
+    beats: [
+      { say: 'Pause the lane anywhere: the left part is sorted, the right part is not. That claim is the loop invariant. Prediction: when does it cover the whole array?' },
+      { say: 'Let the lane finish its work.', until: { obs: 'comparisons_bubble', op: '>=', value: 66 }, hint: 'Twelve items \u2014 12 \u00b7 11 \u00f7 2 = 66 comparisons to the end.' },
+      { say: 'After pass k, the last k items are final and never move again. The invariant is maintained by every pass; 66 comparisons is when it spans everything.' },
+      { ask: 'The invariant "the tail is sorted" is\u2026', options: ['maintained by every pass', 'true only at the start', 'broken by every swap'], answer: 0 },
+      { say: 'A loop is only trusted when something stays true while it runs. Name that thing and you can reason about code without reading every step.' }
+    ]
+  },
+  {
+    id: 'cs.uni.split', world: 'cs', stage: 'uni', instrument: 'search',
+    start: { search_size: 64, target_value: 6 },
+    title: 'Each question halves the list',
+    beats: [
+      { say: 'Sixty-four sorted slots and a target in one of them. Prediction: how many yes-or-no questions must a smart search ask?' },
+      { say: 'Run the search and count its questions.', until: { obs: 'binary_steps', op: '<=', value: 7 }, hint: 'Binary search never needs more than seven questions at 64 \u2014 run it and watch.' },
+      { say: '64 \u2192 32 \u2192 16 \u2192 8 \u2192 4 \u2192 2 \u2192 1. Six halvings, one question each \u2014 that count is a logarithm in plain clothes.' },
+      { ask: 'Doubling the list size adds\u2026', options: ['one more question', 'twice as many questions', 'the same count forever'], answer: 0 },
+      { say: 'A search that halves is a search that scales: a billion items in thirty questions is the same trick, grown up.' }
+    ]
+  },
+
+  /* ======================= phase-1 completion, earth ======================= */
+  {
+    id: 'earth.p.coastline', world: 'earth', stage: 'p', instrument: 'earth',
+    start: { year: 1800 },
+    title: 'Coastlines do not take sides',
+    beats: [
+      { say: 'The clock is set two centuries back. Prediction: what stays put on this map while politics moves?' },
+      { say: 'Open any two countries at this old date.', until: { obs: 'countries_opened', op: '>=', value: 2 }, hint: 'Tap two shapes on the globe \u2014 the dossiers open at 1800.' },
+      { ask: 'Between 1800 and 2020, the coastline of a stable landmass\u2026', options: ['stays essentially the same', 'moves with the borders', 'is redrawn yearly'], answer: 0 },
+      { say: 'The coast is the physical layer: nearly frozen. Names, borders and memberships are political layers, each stamped with a date.' }
+    ]
+  },
+  {
+    id: 'earth.uni.geopol', world: 'earth', stage: 'uni', instrument: 'earth',
+    start: { year: 1914 },
+    title: 'Geography as an argument',
+    beats: [
+      { say: 'A map can argue. Prediction: pick a year that makes a border look natural \u2014 or absurd. Which will you choose?' },
+      { say: 'Open four countries at one fixed year, then defend one regional claim from what the dossiers show.', until: { obs: 'countries_opened', op: '>=', value: 4 }, hint: 'Work one region at a single date so the rows stay comparable.' },
+      { say: 'A geographic claim names a place, a date and a layer. The dossier hands you all three; the argument is choosing them honestly.' },
+      { ask: 'The weakest geographic argument is one that\u2026', options: ['names its year and region', 'compares dossiers from different years', 'cites the coastline'], answer: 1 },
+      { say: 'Geography is not destiny; it is evidence. And evidence only argues when it is dated, placed and compared fairly.' }
+    ]
+  },
+
+  /* ======================= phase-1 completion, music ======================= */
+  {
+    id: 'mus.p.keys', world: 'music', stage: 'p', instrument: 'music',
+    start: { tempo: 80 },
+    title: 'Twelve names, one keyboard',
+    beats: [
+      { say: 'Twelve keys, twelve pitch names. Prediction: how many presses before the counter says ten?' },
+      { say: 'Play ten notes \u2014 any keys you like.', until: { obs: 'notes_played', op: '>=', value: 10 }, hint: 'Tap any keys \u2014 every press is counted.' },
+      { ask: 'Pressing the same key twice records\u2026', options: ['two notes', 'one note', 'no note'], answer: 0 },
+      { say: 'The keyboard is an alphabet of pitches and the counter is a score of what you said. Reading music starts by knowing the alphabet.' }
+    ]
+  },
+  {
+    id: 'mus.uni.octave', world: 'music', stage: 'uni', instrument: 'tuning',
+    start: { note_frequency: 220, reference: 440 },
+    title: 'The octave is 2:1',
+    beats: [
+      { say: 'Double a frequency and the ear calls it "the same note, higher". Prediction: what does the cents readout say at exactly double?' },
+      { say: 'Set the note to exactly double the reference.', until: { obs: 'cents_off', op: '==', value: 1200 }, hint: 'Raise Note frequency to 880 with Reference at 440.' },
+      { ask: 'Two notes an octave apart differ by a factor of\u2026', options: ['2', '1.5', '12'], answer: 0 },
+      { say: '1200 cents is the log-distance of one octave. The octave is the ruler all other intervals are measured against \u2014 and its ratio is simply 2.' }
+    ]
+  },
+
+  /* ======================= phase-1 completion, astro ======================= */
+  {
+    id: 'astro.ls.scale', world: 'astro', stage: 'ls', instrument: 'astro',
+    start: { time: 8 },
+    title: 'Not to scale, on purpose',
+    beats: [
+      { say: 'The planets on screen are strangers to their real gaps. Prediction: what would happen to the picture if the scale were true?' },
+      { say: 'Run twenty Earth years with the true scale on and watch the outer planets barely creep.', until: { obs: 'earth_years', op: '>=', value: 20 }, hint: 'Switch the scale toggle on, then raise Time \u2014 Neptune will hardly move.' },
+      { ask: 'An orrery compresses distances because\u2026', options: ['real proportions would leave the inner planets invisible', 'planets would collide', 'time would stop'], answer: 0 },
+      { say: 'Every diagram is a deal: something is traded for legibility. Knowing what a picture lied about is part of reading it.' }
+    ]
+  },
+  {
+    id: 'astro.uni.clock', world: 'astro', stage: 'uni', instrument: 'astro',
+    start: { time: 12 },
+    title: 'Reading the law off the clock',
+    beats: [
+      { say: 'Neptune needs 165 of our years per lap. Prediction: how many Neptune orbits fit in 500 Earth years?' },
+      { say: 'Bank three Neptune orbits on the clock.', until: { obs: 'neptune_orbits', op: '>=', value: 3 }, hint: 'Raise Time \u2014 three orbits is about 495 Earth years.' },
+      { say: 'One law, two clocks: Earth years and Neptune orbits are the same ledger in different units. 495 Earth years is 3 Neptune laps because 165 \u00b7 3 says so.' },
+      { ask: 'Five hundred Earth years is, in Neptune orbits\u2026', options: ['just over three', 'just under two', 'five'], answer: 0 },
+      { say: 'Kepler\u2019s third law is a exchange rate between orbits. Read any planet\u2019s period and you have read them all.' }
+    ]
+  },
+
+  /* ======================= phase-1 completion, bio ======================= */
+  {
+    id: 'bio.p.trait', world: 'bio', stage: 'p', instrument: 'bio',
+    start: { mutation_rate: 0.06 },
+    title: 'One trait, many versions',
+    beats: [
+      { say: 'No two dots sit at the same spot. Prediction: what happens to each of them when the environment shifts?' },
+      { say: 'Drag the optimum and bring the population back within five per cent of it.', until: { obs: 'distance_from_optimum', op: '<=', value: 0.05 }, hint: 'Move Environment optimum \u2014 the population follows, dot by dot.' },
+      { ask: 'The population holds many trait versions because\u2026', options: ['mutation keeps adding new ones', 'all dots copy each other', 'the optimum is always centred'], answer: 0 },
+      { say: 'A trait is a number and the population is a cloud of its versions. Selection is the wind; mutation is the refill.' }
+    ]
+  },
+  {
+    id: 'bio.uni.testcross', world: 'bio', stage: 'uni', instrument: 'genetics',
+    start: { allele_from_a: 1, allele_from_b: 1 },
+    title: 'Predict the square, then reveal it',
+    beats: [
+      { say: 'Both parents pass A. Prediction: flip one parent to a \u2014 what will Dominant fraction and Heterozygous fraction read?' },
+      { say: 'Reveal it: make the heterozygous fraction exactly one half.', until: { obs: 'heterozygous_fraction', op: '==', value: 0.5 }, hint: 'Lower Allele from B to a.' },
+      { say: 'The 2\u00d72 of one A-parent and one a-parent reads 11, 10, 01, 00: three boxes carry A and two are mixed. In the textbook square, Aa × aa gives a 50/50 phenotype split — this grid is the counting abstraction behind it.' },
+      { ask: 'Aa × aa gives a heterozygous fraction of…', options: ['0.5', '0.75', '1'], answer: 0 },
+      { say: 'Genetics is prediction before revelation. State the fractions first; let the square correct you.' }
+    ]
+  },
+
+  /* ======================= phase-1 completion, stats ======================= */
+  {
+    id: 'stats.p.n', world: 'stats', stage: 'p', instrument: 'stats',
+    start: { sample_size_n: 4, samples_per_frame: 10 },
+    title: 'Bigger samples, tighter piles',
+    beats: [
+      { say: 'Each pile is one sample of n measurements squeezed into one mean. Prediction: what does raising n do to the predicted pile width?' },
+      { say: 'Drive the predicted spread down to three.', until: { obs: 'predicted_n', op: '<=', value: 3 }, hint: 'Raise Sample size n to its maximum \u2014 the prediction is \u03c3/\u221an.' },
+      { ask: 'At n = 100, the predicted spread is\u2026', options: ['a tenth of one measurement\u2019s spread', 'the same as one measurement', 'zero'], answer: 0 },
+      { say: 'The prediction readout is \u03c3/\u221an before a single sample lands. Averaging is the cheapest accuracy there is.' }
+    ]
+  },
+  {
+    id: 'stats.uni.law', world: 'stats', stage: 'uni', instrument: 'stats',
+    start: { sample_size_n: 30, samples_per_frame: 4 },
+    title: 'What convergence does not mean',
+    beats: [
+      { say: 'The pile\u2019s centre settles on the true mean. Prediction: does the next sample also settle?' },
+      { say: 'Watch the mean of means while the pile keeps jumping.', until: { obs: 'samples_drawn', op: '>=', value: 60 }, hint: 'Let it run \u2014 the centre calms, the last bar never does.' },
+      { say: 'The average converges; the individual never does. Believing "it has to even out soon" for the next draw is the gambler\u2019s fallacy, not the law of large numbers.' },
+      { ask: 'The law of large numbers says\u2026', options: ['the mean of many draws converges', 'results even out in the short run', 'every sample equals the mean'], answer: 0 },
+      { say: 'Averages are patient; single events are not. Confusing the two is how casinos and lotteries stay in business.' }
+    ]
+  },
+
+  /* ======================= phase-1 completion, climate ======================= */
+  {
+    id: 'cli.p.weather', world: 'climate', stage: 'p', instrument: 'seasons',
+    start: { axial_tilt: 10 },
+    title: 'Weather today, climate always',
+    beats: [
+      { say: 'One hot afternoon proves nothing. Prediction: which number on this panel describes a whole planet\u2019s habit?' },
+      { say: 'Make the seasons swing hard, then read the averages the model keeps.', until: { obs: 'season_contrast', op: '>=', value: 20 }, hint: 'Raise Axial tilt past 17\u00b0 \u2014 the gap between summer and winter widens.' },
+      { ask: 'Climate is best described as\u2026', options: ['the average weather over many years', 'today\u2019s forecast', 'the hottest day recorded'], answer: 0 },
+      { say: 'Weather is the day; climate is the habit. Averages are how a planet keeps its diary \u2014 and the diary, not the day, is what shifts.' }
+    ]
+  },
+  {
+    id: 'cli.uni.attribute', world: 'climate', stage: 'uni', instrument: 'balance',
+    start: { solar_output: 1.05, emissivity_lower_traps_more: 0.61 },
+    title: 'Who moved the thermometer',
+    beats: [
+      { say: 'The surface sits well above its old equilibrium. Prediction: which knob moved it \u2014 and can you prove it?' },
+      { say: 'Restoring the balance means naming the cause: put the surface back below 15 \u00b0C by touching only one control.', until: { obs: 'surface', op: '<=', value: 15 }, hint: 'Lower Solar output back toward 1.0 \u2014 one knob, one cause.' },
+      { ask: 'Attributing a change requires\u2026', options: ['changing one thing at a time', 'changing everything at once', 'guessing the loudest cause'], answer: 0 },
+      { say: 'One knob at a time is not just careful tinkering \u2014 it is the logic of attribution, from the lab bench to the planet.' }
+    ]
+  },
+
+  /* ======================= phase-1 completion, chem ======================= */
+  {
+    id: 'chem.p.walk', world: 'chem', stage: 'p', instrument: 'chem',
+    start: { atomic_number: 1 },
+    title: 'One proton changes everything',
+    beats: [
+      { say: 'Hydrogen: one proton, and the whole table is ahead. Prediction: how much does element 2 differ from element 1?' },
+      { say: 'Walk the atomic number upward and open six elements.', until: { obs: 'elements_opened', op: '>=', value: 6 }, hint: 'Slide Atomic number step by step \u2014 each stop is a new element.' },
+      { ask: 'Hydrogen and helium differ by\u2026', options: ['one proton \u2014 a different element entirely', 'one neutron \u2014 the same element', 'nothing at all'], answer: 0 },
+      { say: 'The proton count is the name of the element. One proton is the difference between the gas in you and the gas in a balloon.' }
+    ]
+  },
+  {
+    id: 'chem.uni.predict', world: 'chem', stage: 'uni', instrument: 'isotopes',
+    start: { atomic_number: 8, neutrons: 2 },
+    title: 'Predict the mass, then check',
+    beats: [
+      { say: 'Oxygen is element 8. Prediction: how many neutrons does oxygen-16 need?' },
+      { say: 'Build oxygen-16 and read the mass number.', until: { obs: 'mass_number', op: '==', value: 16 }, hint: 'Raise Neutrons to 8 \u2014 mass number is protons plus neutrons.' },
+      { ask: 'Carbon-14 has 6 protons. Its neutron count is\u2026', options: ['8', '14', '6'], answer: 0 },
+      { say: 'N = A \u2212 Z. Isotope names are subtraction dressed as notation \u2014 and the count decides the mass, never the chemistry.' }
+    ]
+  },
+
+  /* ======================= phase-1 completion, art ======================= */
+  {
+    id: 'art.ls.value', world: 'art', stage: 'ls', instrument: 'art',
+    start: { brush: 20, base_value: 50 },
+    title: 'Light, middle, dark',
+    beats: [
+      { say: 'Three values are the smallest honest drawing. Prediction: what does the middle one do that the extremes cannot?' },
+      { say: 'Establish three distinct values on the canvas.', until: { obs: 'distinct_values', op: '>=', value: 3 }, hint: 'One light stroke, one dark, one in between.' },
+      { ask: 'The middle value\u2019s job is\u2026', options: ['turning surfaces toward or away from the light', 'outline', 'decoration'], answer: 0 },
+      { say: 'Extremes frame; the middle models. Light, middle, dark is the whole grammar of seeing form.' }
+    ]
+  },
+  {
+    id: 'art.us.contrast', world: 'art', stage: 'us', instrument: 'palette',
+    start: { mix_ratio: 10, base_value: 50 },
+    title: 'The gap moves the eye',
+    beats: [
+      { say: 'Where does the eye land first in any painting? Prediction: it is decided by a number you control.' },
+      { set: { base_value: 10 }, hold: 1, say: 'Base value 10 — the dark anchor of the pair.' },
+      { say: 'Widen the gap: push Mix ratio to 100 so the mixed grey sits at the far end.', until: { obs: 'value_gap', op: '>=', value: 60 }, hint: 'Base value 10 with Mix ratio 100 mixes to 90 — a gap of 80.' },
+      { ask: 'The eye enters a drawing at…', options: ['the sharpest value gap', 'the centre of the canvas', 'the largest object'], answer: 0 },
+      { say: 'Contrast is a steering wheel. Wherever the widest gap sits, the viewer looks — so place the gap where you want the story to start.' }
+    ]
+  },
+  {
+    id: 'art.uni.critique', world: 'art', stage: 'uni', instrument: 'art',
+    start: { brush: 44, base_value: 30 },
+    title: 'Reading a painting\u2019s structure',
+    beats: [
+      { say: 'A finished study can be read like a page: values, gaps, coverage. Prediction: what three questions does a critique ask?' },
+      { say: 'Paint a full study \u2014 cover the canvas, keep the values distinct, park the biggest gap where you want the eye.', until: { obs: 'canvas_covered', op: '>=', value: 40 }, hint: 'Big brush, long strokes \u2014 structure first, detail never.' },
+      { ask: 'The first question of a critique is\u2026', options: ['is the subject drawn well?', 'how many values, and where is the widest gap?', 'what colours were used?'], answer: 1 },
+      { say: 'Critique is not taste; it is checking structure \u2014 the same three questions every time, asked of anyone\u2019s painting including your own.' }
+    ]
+  },
+  {
+    id: 'eng.uni.solve', world: 'eng', stage: 'uni', instrument: 'eng',
+    start: { bottom_chord: 200, top_chord: 150, diagonals: 120 },
+    title: 'Eighteen equations, one answer',
+    beats: [
+      { say: 'The bridge\u2019s forces come from solving, not styling. Prediction: if every member is widened, what happens to the forces \u2014 and to the stresses?' },
+      { say: 'Widen every group and watch the factor of safety pass 3.0 while the bottom-chord force never moves.', until: { obs: 'factor_of_safety', op: '>=', value: 3 }, hint: 'Raise all three group sliders toward their maximum \u2014 the forces are fixed by geometry and load.' },
+      { ask: 'Member area changes\u2026', options: ['the forces in the truss', 'the stresses in the members', 'the load path'], answer: 1 },
+      { say: 'The solve assigns forces once, from geometry and load. Areas only divide \u2014 which is why sizing and analysis are different questions.' }
+    ]
+  },
+  {
+    id: 'mat.uni.remainder', world: 'maths', stage: 'uni', instrument: 'blocks',
+    start: { objects: 22, groups: 5 },
+    title: 'Where remainders go',
+    beats: [
+      { say: 'Twenty-two dots, five baskets: no fair whole-number share exists. Prediction: how uneven must the groups become?' },
+      { say: 'Place every dot \u2014 the groups cannot all be equal.', until: { obs: 'spread', op: '>=', value: 1 }, hint: 'Place all 22 \u2014 two baskets must hold five while three hold four.' },
+      { ask: '22 = 4 \u00d7 5 + 2. The remainder 2 becomes\u2026', options: ['one extra dot in two groups', 'an empty group', 'nothing \u2014 it vanishes'], answer: 0 },
+      { say: 'A remainder is not an error; it is the honest residue of division \u2014 and the seed of fractions (22/5 = 4.4) and of modular arithmetic.' }
+    ]
   }
 ];
 
@@ -4884,7 +5804,1704 @@ export const ENRICHMENT = {
     "prereqs": [
       "eng.budget"
     ]
-  }
+  },
+  "phy.p.float": {
+    "key": "An object floats when its density is below the fluid's — mass per litre decides, not total weight.",
+    "why": "Buoyant force depends on how much fluid the object displaces. A less dense object displaces enough water to balance its weight before it is fully submerged; a denser one cannot.",
+    "mistake": "Believing heavy things sink and light things float. A 10,000-tonne ship floats; a 1 kg stone sinks. Compare densities, never total weights.",
+    "worked": {
+      "q": "Ball A has density 0.8 kg/L, ball B has 1.2 kg/L. Which floats, and what fraction of A sits below the waterline?",
+      "steps": [
+        "Compare each density with water's 1.0 kg/L.",
+        "A is below 1.0, so it floats; B is above, so it sinks.",
+        "The submerged fraction equals the density ratio: 0.8 of A sits under."
+      ],
+      "a": "A floats with 80% submerged; B sinks."
+    },
+    "sources": ["OpenStax College Physics, fluids"],
+    "prereqs": ["phy.p.push"]
+  },
+  "phy.ls.heavy": {
+    "key": "For a fixed push, doubling the mass halves the acceleration and the two-second distance.",
+    "why": "Newton's second law: a = F/m. Mass appears only in the denominator, so the response to the same force shrinks in exact proportion.",
+    "mistake": "Assuming a heavier object is harder to start but then travels further, confusing inertia with momentum. With the same force and time, heavier means slower and shorter.",
+    "worked": {
+      "q": "Force 4 N on 2 kg — how far in two seconds?",
+      "steps": [
+        "a = F/m = 4/2 = 2 m/s².",
+        "Distance in two seconds is ½at².",
+        "½ × 2 × 4 = 4 m."
+      ],
+      "a": "4 m — half the 8 m the same push gave a 1 kg ball."
+    },
+    "sources": ["OpenStax College Physics, dynamics"],
+    "prereqs": ["phy.p.push"]
+  },
+  "phy.us.newton2": {
+    "key": "Acceleration equals force divided by mass, and the app's readouts follow that equation exactly.",
+    "why": "The second law is not a slogan: it is the definition of how force, mass and acceleration are locked together. Every readout in this instrument is computed from it, so any two values fix the third.",
+    "mistake": "Treating F = ma as two separate facts ('force pushes', 'mass resists'). It is one constraint: change any one and another must follow.",
+    "worked": {
+      "q": "What force gives a 2 kg ball a two-second distance of 6 m?",
+      "steps": [
+        "Distance in two seconds is 2F/m, so 6 = 2F/2.",
+        "So F = 6 N.",
+        "Check: a = 6/2 = 3 m/s², and ½ × 3 × 2² = 6 m."
+      ],
+      "a": "6 N."
+    },
+    "sources": ["OpenStax College Physics, Newton's laws"],
+    "prereqs": ["phy.ls.heavy"]
+  },
+  "phy.us.mass": {
+    "key": "Distance in two seconds is 2F/m, so mass is in the denominator — doubling it halves the run.",
+    "why": "The two-second distance inherits the inverse proportionality from a = F/m. Nothing else in the model depends on mass, so the halving is exact, not approximate.",
+    "mistake": "Reading the mass slider as a strength knob ('more mass = more momentum = further'). Momentum grows with mass, but the distance under fixed force shrinks.",
+    "worked": {
+      "q": "A ball runs 4 m at 2 kg under force 4 N. What mass keeps the run at 4 m if the force doubles to 8 N?",
+      "steps": [
+        "Distance is 2F/m.",
+        "Wanted: 2 × 8 / m = 4.",
+        "m = 4 kg."
+      ],
+      "a": "4 kg — double force and double mass cancel."
+    },
+    "sources": ["OpenStax College Physics, dynamics"],
+    "prereqs": ["phy.us.newton2"]
+  },
+  "phy.us.ten": {
+    "key": "Fringe spacing is λL/d: a wider slit separation packs more stripes onto the same screen.",
+    "why": "The two sources' path difference grows more slowly per degree when they sit further apart, so a fixed screen span crosses more maxima. The screen count is stripe spacing against span.",
+    "mistake": "Thinking closer slits crowd the stripes together. Halving the separation doubles the spacing and halves the count.",
+    "worked": {
+      "q": "Slits at 4 µm show about five stripes. Roughly how many at 8 µm, same light?",
+      "steps": [
+        "Spacing w = λL/d, so doubling d halves w.",
+        "Twice as many stripes fit on the same screen.",
+        "5 → about 10."
+      ],
+      "a": "About ten — the count grows with separation."
+    },
+    "sources": ["OpenStax University Physics, wave optics"],
+    "prereqs": ["phy.pattern"]
+  },
+  "phy.uni.ratio": {
+    "key": "Distance is proportional to force at fixed mass — and proportionality is a testable claim, not a phrase.",
+    "why": "2F/m is linear in F. Linearity is what makes scaling legitimate: whatever is true at one force is true at double, triple, a tenth. Engineering leans on this every day.",
+    "mistake": "Confusing 'proportional' with 'correlated'. Proportional means a fixed ratio (F = 8 gives exactly 4× the F = 2 distance); correlated only means they move together.",
+    "worked": {
+      "q": "Force 2 on mass 2 gives 2 m. What force gives 5 m on the same mass?",
+      "steps": [
+        "Distance = 2F/2 = F.",
+        "So F = 5 N.",
+        "Check the ratio: 5/2 = 2.5, the same as 5 m / 2 m."
+      ],
+      "a": "5 N — distance scales with force, always."
+    },
+    "sources": ["OpenStax College Physics, dynamics"],
+    "prereqs": ["phy.us.newton2"]
+  },
+  "chem.p.material": {
+    "key": "Every material is built from the 118 elements on the table; compounds combine them in fixed ratios.",
+    "why": "Elements are the alphabet of matter. A substance's identity comes from which atoms are in it and in what proportion — H₂O is a ratio as much as a recipe.",
+    "mistake": "Thinking a compound is a mixture you could stir apart. Water is not 'wet hydrogen plus oxygen'; it is a new substance with its own properties.",
+    "worked": {
+      "q": "How many elements, and how many atoms, in one molecule of water?",
+      "steps": [
+        "Elements: hydrogen and oxygen — 2.",
+        "Atoms in one molecule: 2 hydrogen + 1 oxygen = 3.",
+        "Both facts matter: element identity and ratio."
+      ],
+      "a": "2 elements, 3 atoms per molecule."
+    },
+    "sources": ["OpenStax Chemistry 2e, ch. 1"],
+    "prereqs": ["chem.families"]
+  },
+  "chem.ls.hunt": {
+    "key": "Electronegativity generally rises across a row because protons accumulate on the same shell.",
+    "why": "Moving right along a period adds protons to the nucleus while the outer shell stays the same distance out, so the pull on electrons strengthens step by step.",
+    "mistake": "Reading the table as an unordered list of facts. The table's shape is the trend: rows are the pulling contest, columns are the family resemblance.",
+    "worked": {
+      "q": "Between lithium (Z = 3) and fluorine (Z = 9), which pulls shared electrons harder?",
+      "steps": [
+        "Same shell, more protons as you move right.",
+        "Fluorine's nucleus pulls hardest of the two.",
+        "That is why fluorine is the most electronegative element."
+      ],
+      "a": "Fluorine — the trend runs up-and-right."
+    },
+    "sources": ["OpenStax Chemistry 2e, periodicity", "TeddyRookBook curriculum, Chemistry"],
+    "prereqs": ["chem.pull"]
+  },
+  "chem.us.count": {
+    "key": "Mass number is simply protons plus neutrons — a count, not a measurement.",
+    "why": "Protons define the element; neutrons change the mass without touching the chemistry. The count is why isotope notation works: oxygen-16 and oxygen-18 are both oxygen.",
+    "mistake": "Believing extra neutrons change the element or its charge. Only the proton count names an element.",
+    "worked": {
+      "q": "A nucleus has 8 protons and 10 neutrons. Name it and give its mass number.",
+      "steps": [
+        "8 protons → oxygen, whatever the neutrons.",
+        "Mass number = 8 + 10 = 18.",
+        "It is oxygen-18, a real, heavy isotope of oxygen."
+      ],
+      "a": "Oxygen-18."
+    },
+    "sources": ["OpenStax Chemistry 2e, nuclei and isotopes"],
+    "prereqs": ["chem.isotopes"]
+  },
+  "chem.uni.heavy": {
+    "key": "As nuclei get heavier they need proportionally more neutrons to stay bound — the valley of stability bends.",
+    "why": "Protons repel each other electrically; neutrons add binding without adding repulsion, spacing the protons out. The needed neutron-to-proton ratio climbs from about 1 to roughly 1.5 as Z grows past 20.",
+    "mistake": "Assuming the most stable nucleus has equal numbers of each. That holds for small Z only; beyond calcium the balance tips toward neutrons.",
+    "worked": {
+      "q": "Uranium-238 has 92 protons. How many neutrons, and what is N/Z?",
+      "steps": [
+        "238 − 92 = 146 neutrons.",
+        "N/Z = 146/92 ≈ 1.59.",
+        "Near this model's 1.5 target — uranium-238 is long-lived, not stable forever."
+      ],
+      "a": "146 neutrons; N/Z ≈ 1.59."
+    },
+    "sources": ["OpenStax Chemistry 2e, nuclear structure"],
+    "prereqs": ["chem.isotopes.heavy"]
+  },
+  "art.p.mark": {
+    "key": "Every mark commits to a position, a size and a value — drawing is decision-making, not tracing.",
+    "why": "A stroke that could be defended is one whose reason you can state: here, this big, this dark. That is the difference between a drawing and texture.",
+    "mistake": "Scratching at the surface hoping the right line appears. Search-strokes are fine as scaffolding, but the drawing only exists once marks are committed.",
+    "worked": {
+      "q": "Your first three marks are: a dark blob top-left, a mid stripe across, a light patch bottom-right. What have you already built?",
+      "steps": [
+        "Three values are placed.",
+        "Their positions create a rough balance — top-left dark against bottom-right light.",
+        "Structure first: the eye now has a path."
+      ],
+      "a": "A value structure — the drawing's skeleton."
+    },
+    "sources": ["TeddyRookBook curriculum, Drawing Basics"],
+    "prereqs": ["art.three"]
+  },
+  "art.p.cover": {
+    "key": "Block in big shapes with broad values before any edge or detail exists.",
+    "why": "Detail can only decorate a structure. Blocking in answers the compositional questions — where is light, where is mass — while changes are still cheap.",
+    "mistake": "Finishing one corner to perfection before the rest exists. The eye then compares finished detail against untouched emptiness, and everything looks wrong.",
+    "worked": {
+      "q": "Twenty per cent of the canvas is covered in three values. Is the drawing 'started'?",
+      "steps": [
+        "Yes — value placement is composition.",
+        "Remaining area is now a set of decisions, not a void.",
+        "Edges and detail can only refine, not rescue."
+      ],
+      "a": "It is started in the way that matters: structurally."
+    },
+    "sources": ["TeddyRookBook curriculum, Drawing Basics"],
+    "prereqs": ["art.p.mark"]
+  },
+  "art.ls.four": {
+    "key": "The fourth value — a middle tone between your extremes — is where drawing starts modelling light.",
+    "why": "Three values separate planes; a fourth begins to turn them, because surfaces between the light and the dark now have an intermediate step to land on.",
+    "mistake": "Adding the fourth value as another equal share instead of between existing ones. The step should describe a surface angled part-way toward the light.",
+    "worked": {
+      "q": "You have values 10 and 90. Where does a natural fourth value sit?",
+      "steps": [
+        "Between them, not beside them.",
+        "Roughly the middle: around 45–55.",
+        "That single mid-tone carries most of the form."
+      ],
+      "a": "Around the middle of the existing range."
+    },
+    "sources": ["TeddyRookBook curriculum, Drawing Basics"],
+    "prereqs": ["art.three"]
+  },
+  "art.uni.midtone": {
+    "key": "Representational painting lives in the middle values; the extremes are accents, not the population.",
+    "why": "Most visible surfaces meet the light at an angle and sit in the mid range. The darkest dark and lightest light frame the read; the middle does the describing.",
+    "mistake": "Spending the range at the extremes — poster-like black and white — then wondering why the result looks flat or harsh.",
+    "worked": {
+      "q": "A painting's histogram: 5% near black, 10% near white, 85% between 30 and 70. What does that tell you?",
+      "steps": [
+        "The mass sits mid-scale — that is modelling.",
+        "The extremes act as punctuation.",
+        "Squint: the mid structure is what survives."
+      ],
+      "a": "It is built the way representational painting usually is."
+    },
+    "sources": ["TeddyRookBook curriculum, Colour and Design"],
+    "prereqs": ["art.palette.steps"]
+  },
+  "mus.p.taps": {
+    "key": "Tempo sets how fast the beats pass — it changes the rate, never which notes are available.",
+    "why": "A beat is a time interval: at 96 bpm one beat is 0.625 s, at 120 it is 0.5 s. The vocabulary of keys and chords is untouched; only the spacing moves.",
+    "mistake": "Treating tempo as difficulty or as style. It is one number — the gap between beats — and everything else follows from it.",
+    "worked": {
+      "q": "How long are two beats at 96 bpm?",
+      "steps": [
+        "One beat = 60/96 s = 0.625 s.",
+        "Two beats = 1.25 s.",
+        "Compare with 120 bpm: 2 × 0.5 = 1.0 s."
+      ],
+      "a": "1.25 s — a quarter of a second slower per two beats."
+    },
+    "sources": ["OpenStax Music, rhythm basics", "TeddyRookBook curriculum, Piano Basics"],
+    "prereqs": ["mus.beat"]
+  },
+  "mus.ls.chords": {
+    "key": "I, IV and V are home, away and push — nine notes that carry most familiar songs.",
+    "why": "The tonic states the key, the subdominant moves away from it, the dominant contains the notes that pull hardest back to it. That loop is the harmonic engine.",
+    "mistake": "Hearing the three chords as 'different noises'. Each has a function relative to I; play them in the wrong order and the pull is felt immediately.",
+    "worked": {
+      "q": "Why does ending a phrase on V feel unfinished?",
+      "steps": [
+        "V contains the leading tone, one step under the tonic.",
+        "That note pulls upward toward I.",
+        "Ending on V leaves the pull unresolved."
+      ],
+      "a": "Because V points home; only I is home."
+    },
+    "sources": ["OpenStax Music, harmony", "TeddyRookBook curriculum, Piano Basics"],
+    "prereqs": ["mus.beat"]
+  },
+  "mus.us.faster": {
+    "key": "The phrase is the invariant; tempo is the challenge — the same notes demand tighter anticipation when sped up.",
+    "why": "Melodic identity survives a tempo change exactly the way a shape survives a scale change. What changes is the planning horizon: less time to hear the next note before it is due.",
+    "mistake": "Practising speed by playing carelessly faster. Speed is built by keeping the order exact first, then shrinking the gaps.",
+    "worked": {
+      "q": "The phrase at 120 bpm takes 4 seconds. How long at 168 bpm?",
+      "steps": [
+        "8 beats × 60/120 s = 4 s.",
+        "8 × 60/168 ≈ 2.86 s.",
+        "The gap per note shrank from 0.5 s to 0.357 s."
+      ],
+      "a": "About 2.9 s."
+    },
+    "sources": ["OpenStax Music, practice and tempo", "TeddyRookBook curriculum, Piano Basics"],
+    "prereqs": ["mus.phrase"]
+  },
+  "mus.uni.fifth": {
+    "key": "An interval is a frequency ratio: the just fifth is 3:2, which the cents readout shows as 702.",
+    "why": "Cents are a logarithmic ruler for frequency ratios: cents = 1200·log₂(f₂/f₁). Two tones in a simple ratio repeat their combined pattern quickly and fuse; out of ratio, they drift and beat.",
+    "mistake": "Measuring intervals in distance on a keyboard instead of in ratios. Five keys up happens to be a fifth in one scale; the physics is the 3:2, not the counting.",
+    "worked": {
+      "q": "Why does 750 Hz sit at 702 cents above 500 Hz?",
+      "steps": [
+        "cents = 1200·log₂(f₂/f₁).",
+        "1200·log₂(750/500) = 1200·log₂(1.5) ≈ 702.0.",
+        "The equal-tempered fifth is 700 cents — 749.15 Hz here, two cents flat of pure."
+      ],
+      "a": "Because 750/500 is exactly 3:2, and 1200·log₂(3/2) ≈ 702."
+    },
+    "sources": ["OpenStax Music, tuning systems", "TeddyRookBook curriculum, Piano Basics"],
+    "prereqs": ["mus.tuning.beats"]
+  },
+  "earth.p.place": {
+    "key": "A dossier is the place at one chosen date — the year is part of the data, not the frame.",
+    "why": "Borders, names and memberships are all dated claims. Change the year and the same coordinate describes a different political animal.",
+    "mistake": "Treating the map as timeless background. Two dossiers of the same country fifty years apart can disagree about almost everything except the coastline.",
+    "worked": {
+      "q": "What changes for a country dossier between 1950 and 2020 — and what does not?",
+      "steps": [
+        "Political facts: borders, names, memberships — dated, they change.",
+        "Physical facts: area of land, position — nearly constant.",
+        "The date decides which layer you are reading."
+      ],
+      "a": "The political layers change; the physical ones barely do."
+    },
+    "sources": ["TeddyRookBook curriculum, Geography", "Natural Earth 110m dataset (geometry)"],
+    "prereqs": ["earth.p.globe"]
+  },
+  "earth.ls.five": {
+    "key": "Sets of dossiers are evidence where single dossiers are anecdotes.",
+    "why": "One country tells you what happened there. Five in a region begin to show shared borders, trade routes and timing — pattern requires replication.",
+    "mistake": "Opening countries at random years and calling the result a pattern. Comparability needs the shared date first.",
+    "worked": {
+      "q": "Five coastal dossiers, all at 1900. What can you legitimately compare?",
+      "steps": [
+        "Same year → same political frame.",
+        "Shared region → shared shipping and border history.",
+        "Differences you see are regional, not calendar artifacts."
+      ],
+      "a": "Regional structure, honestly compared."
+    },
+    "sources": ["TeddyRookBook curriculum, Geography"],
+    "prereqs": ["earth.p.place"]
+  },
+  "earth.us.migrate": {
+    "key": "Rewinding the timeline changes the dossier because every political layer carries its own date.",
+    "why": "A map is a stack: geometry at the bottom, then borders, names, memberships — each stamped with when it was true. The year slider moves you between layers.",
+    "mistake": "Projecting today's borders onto the past. A 1900 dossier drawn with 2020 boundaries would be an argument, not a record.",
+    "worked": {
+      "q": "Why does the same dossier button at 1900 show different content than at 2020?",
+      "steps": [
+        "The dossier queries events dated at or before the chosen year.",
+        "Events after 1900 are excluded, not deleted.",
+        "So the stack you see is the stack that existed."
+      ],
+      "a": "Because the dossier is a dated stack, and 1900 has fewer layers."
+    },
+    "sources": ["TeddyRookBook curriculum, Geography"],
+    "prereqs": ["earth.timeline"]
+  },
+  "earth.uni.atlas": {
+    "key": "Hold the year constant across many dossiers and geography becomes a table you can argue with.",
+    "why": "Comparability is the price of every claim about regions. One shared date turns six anecdotes into six rows of one dataset.",
+    "mistake": "Mixing dates inside a comparison, then reading the differences as regional. Half the difference may just be the calendar.",
+    "worked": {
+      "q": "You opened six countries: three at 1900, three at 2020. What is wrong with the comparison?",
+      "steps": [
+        "The rows differ in two ways at once — place and date.",
+        "Any difference could be either.",
+        "Fix the year and only the place varies."
+      ],
+      "a": "Confounded. Rerun with one shared year."
+    },
+    "sources": ["TeddyRookBook curriculum, Geography"],
+    "prereqs": ["earth.us.migrate"]
+  },
+  "cs.p.sequence": {
+    "key": "An algorithm is a sequence of tiny decisions; watched at speed, the sequence is the program.",
+    "why": "Bubble sort is compare-neighbour, swap-if-needed, step forward — repeated. Nothing else happens anywhere in the lane, which is why it is the right first algorithm to watch.",
+    "mistake": "Watching the animation as a shape rather than as steps. The picture is the trace of decisions; count them and the shape explains itself.",
+    "worked": {
+      "q": "Eight items — how many comparisons does one full bubble pass set need?",
+      "steps": [
+        "Pass one compares 7 pairs, pass two 6, down to 1.",
+        "Sum: 7+6+5+4+3+2+1 = 28.",
+        "n(n−1)/2 with n = 8."
+      ],
+      "a": "28 comparisons."
+    },
+    "sources": ["TeddyRookBook curriculum, Robotics", "CLRS-style sequence framing"],
+    "prereqs": ["cs.p.race"]
+  },
+  "cs.ls.loop": {
+    "key": "The loop count — about n²/2 — is the cost of bubble sort.",
+    "why": "Each item must be compared against each later item once. That pairwise structure is where the quadratic term comes from, independent of how fast you watch.",
+    "mistake": "Believing Steps per frame changes the cost. It changes only the playback rate; the comparisons are the same decisions either way.",
+    "worked": {
+      "q": "Ten items: why exactly 45 comparisons?",
+      "steps": [
+        "Item 1 meets 9 others, item 2 meets 8 remaining…",
+        "9+8+…+1 = 45.",
+        "n(n−1)/2 with n = 10."
+      ],
+      "a": "45 — and steps-per-frame cannot change it."
+    },
+    "sources": ["TeddyRookBook curriculum, Robotics"],
+    "prereqs": ["cs.p.sequence"]
+  },
+  "cs.us.halves": {
+    "key": "Doubling n multiplies bubble sort's work by about four — the quadratic curve made tangible.",
+    "why": "n(n−1)/2 grows as n². Doubling n quadruples n² and roughly quadruples the comparison count. That is the whole argument for the logarithmic alternatives.",
+    "mistake": "Extrapolating linearly from small arrays. Eight items cost 28 comparisons, so sixteen 'should' cost 56 — it costs 120.",
+    "worked": {
+      "q": "16 items cost 120. What about 64 items?",
+      "steps": [
+        "n²/2 scaling: (64/16)² = 16.",
+        "120 × 16 ≈ 1920.",
+        "Exact: 64×63/2 = 2016."
+      ],
+      "a": "About 2000 comparisons — sixteen times the work for four times the items."
+    },
+    "sources": ["TeddyRookBook curriculum, Robotics"],
+    "prereqs": ["cs.ls.loop"]
+  },
+  "lang.p.greet": {
+    "key": "Subject before verb before rest: order carries the grammar, and slow speech buys the time to get it right.",
+    "why": "In the languages this world drills, who-does-what is read from position and endings together. Slowing the voice does not change the required order; it changes how much time you have to plan it.",
+    "mistake": "Building the sentence in your own language's order and hoping it translates. The tiles lock out mid-positions for a reason.",
+    "worked": {
+      "q": "The verb's ending says 'I do'. Which tile must come next?",
+      "steps": [
+        "The ending marks the doer as 'I'.",
+        "The subject tile is often redundant — the ending already said it.",
+        "Order plus ending agree, and the sentence locks."
+      ],
+      "a": "The rest of the action — the subject may not even need a tile."
+    },
+    "sources": ["TeddyRookBook curriculum, Languages"],
+    "prereqs": ["lang.p.speed"]
+  },
+  "lang.ls.four": {
+    "key": "Four correct sentences in a row is fluency's first honest sample.",
+    "why": "One success can be recall; four consecutive ones require the pattern itself. Repetition of the same order-with-endings rule is what moves knowledge from deliberate to automatic.",
+    "mistake": "Varying the strategy between attempts. The habit only forms if the rule stays fixed while the vocabulary changes.",
+    "worked": {
+      "q": "Sentence three breaks. What should you fix first?",
+      "steps": [
+        "Check the order before the vocabulary.",
+        "Subject, verb, rest — one slot at a time.",
+        "Only then look at which word was wrong."
+      ],
+      "a": "The order — it is the rule in play."
+    },
+    "sources": ["TeddyRookBook curriculum, Languages"],
+    "prereqs": ["lang.p.greet"]
+  },
+  "lang.us.reading": {
+    "key": "Reading speed is words per minute: the passage's length is fixed, only the rate moves.",
+    "why": "Reading time = words ÷ wpm × 60. The text does not change as you speed up; the seconds shrink arithmetically.",
+    "mistake": "Believing faster reading means skimming differently. In this model — and mostly in life — the words are constant and only the rate is a dial.",
+    "worked": {
+      "q": "100 words at 150 wpm — how long?",
+      "steps": [
+        "100 / 150 minutes.",
+        "× 60 seconds = 40 s.",
+        "At 120 wpm it was 50 s."
+      ],
+      "a": "40 seconds."
+    },
+    "sources": ["TeddyRookBook curriculum, Phonics Practice"],
+    "prereqs": ["lang.pace.band"]
+  },
+  "astro.p.wander": {
+    "key": "Planets closer to the Sun complete laps faster — distance sets the period.",
+    "why": "Kepler's third law: T² ∝ a³. Inner planets have small orbits and short periods, so in any fixed window they visibly lap the outer ones.",
+    "mistake": "Believing bigger planets orbit slower because they are bigger. Size is irrelevant here; distance does all the work.",
+    "worked": {
+      "q": "In one Earth year, roughly how many laps does Mercury complete?",
+      "steps": [
+        "Mercury's period is about 0.24 years.",
+        "1 / 0.24 ≈ 4.2.",
+        "Inner planets lap the clock, not just each other."
+      ],
+      "a": "About four laps."
+    },
+    "sources": ["OpenStax Astronomy 2e", "TeddyRookBook curriculum, Astronomy"],
+    "prereqs": ["astro.p.orbits"]
+  },
+  "astro.ls.solar": {
+    "key": "Forty Earth years is a fraction of one Neptune orbit — the outer solar system runs on another clock.",
+    "why": "Neptune's period is about 165 years. At any human timescale the outer planets barely move, which is why their discovery waited on telescopes and patience.",
+    "mistake": "Expecting the whole solar system to 'come around' in a year or two of watching. The timescale mismatch is itself the lesson.",
+    "worked": {
+      "q": "What fraction of Neptune's orbit passes in 40 Earth years?",
+      "steps": [
+        "40 / 165 ≈ 0.24.",
+        "About a quarter of one lap.",
+        "Uranus at 84 years manages nearly half."
+      ],
+      "a": "About a quarter."
+    },
+    "sources": ["OpenStax Astronomy 2e"],
+    "prereqs": ["astro.p.wander"]
+  },
+  "astro.us.inner": {
+    "key": "The same law that makes Neptune slow makes Mercury fast — one rule across the whole range.",
+    "why": "T² ∝ a³ has no exceptions in the model. The inner four are just the small-a end of the same curve the outer planets trace at the large-a end.",
+    "mistake": "Memorising inner periods as separate facts instead of reading them off the law.",
+    "worked": {
+      "q": "Mars' period is 1.88 years. How many Mars laps in eight Earth years?",
+      "steps": [
+        "8 / 1.88 ≈ 4.3.",
+        "Earth itself completes exactly 8.",
+        "Venus at 0.62 years completes about 13."
+      ],
+      "a": "About four Mars laps — fewer than Earth's eight."
+    },
+    "sources": ["OpenStax Astronomy 2e"],
+    "prereqs": ["astro.ls.solar"]
+  },
+  "astro.uni.calendar": {
+    "key": "One cycle of Moon phases is a synodic month: 29.5 days, and 'month' is named after it.",
+    "why": "The phase angle maps linearly onto days in this model at 29.5 days per 360°. Calendars built on that cycle are older than writing.",
+    "mistake": "Confusing the phase cycle (29.5 d, synodic) with the orbit around Earth (27.3 d, sidereal). The two differ because Earth also moves around the Sun.",
+    "worked": {
+      "q": "Phase angle 180° — what day of the cycle, and what phase?",
+      "steps": [
+        "Cycle day = 180/360 × 29.5 = 14.75.",
+        "Illuminated fraction = (1 − cos 180°)/2 = 1.",
+        "Half the cycle in: fully lit."
+      ],
+      "a": "Day 14.75, full moon."
+    },
+    "sources": ["OpenStax Astronomy 2e", "TeddyRookBook curriculum, Astronomy"],
+    "prereqs": ["astro.moon"]
+  },
+  "bio.p.living": {
+    "key": "A population never stops changing: mutation guarantees new variation every generation.",
+    "why": "Each birth shuffles existing genes and adds small random changes. Even with no environmental change, the individuals themselves are new each generation.",
+    "mistake": "Thinking evolution only happens 'when something happens'. Generation turnover is itself the change.",
+    "worked": {
+      "q": "Twelve generations passed with the optimum untouched. What changed?",
+      "steps": [
+        "Individuals: all replaced by offspring.",
+        "Mean trait: nudged each generation by mutation and selection.",
+        "Environment: unchanged."
+      ],
+      "a": "The population; not the landscape."
+    },
+    "sources": ["OpenStax Biology 2e, population genetics"],
+    "prereqs": ["bio.p.change"]
+  },
+  "bio.ls.raw": {
+    "key": "Mutation supplies the variation selection acts on — turn it up and the spread refuses to collapse.",
+    "why": "Selection narrows the distribution toward the optimum; mutation re-widens it every generation. The equilibrium spread is set by the balance of the two.",
+    "mistake": "Imagining selection 'uses up' variation. Without fresh mutation, adaptation would stall within a few generations.",
+    "worked": {
+      "q": "What happens to the spread if mutation drops to zero at fixed selection?",
+      "steps": [
+        "No new variation enters.",
+        "Selection narrows what remains.",
+        "The population converges — and can no longer adapt to a moved optimum."
+      ],
+      "a": "It collapses; adaptability goes with it."
+    },
+    "sources": ["OpenStax Biology 2e, population genetics"],
+    "prereqs": ["bio.p.living"]
+  },
+  "bio.us.carrier": {
+    "key": "A dominant-looking learner can still carry the recessive allele — 'shows the trait' and 'only passes the trait' are different claims.",
+    "why": "In the square, boxes that mix one A with one a look dominant and are heterozygous: they show the trait while holding the other allele. The full Aa × Aa square extends the same logic to 1:2:1.",
+    "mistake": "Assuming a dominant-looking parent can only pass the dominant allele. The square says otherwise — that is exactly what 'carrier' means.",
+    "worked": {
+      "q": "One parent passes A, the other a. What do the four boxes read, and what fractions follow?",
+      "steps": [
+        "The grid reads 11, 10, 01, 00.",
+        "Three of four boxes carry A; two are mixed — heterozygous fraction 0.5.",
+        "Every mixed box looks dominant while carrying a — that is the carrier idea."
+      ],
+      "a": "Half the boxes are mixed: dominant-looking, recessive-carrying."
+    },
+    "sources": ["OpenStax Biology 2e, Mendelian genetics"],
+    "prereqs": ["bio.genetics.hetero"]
+  },
+  "bio.uni.fixation": {
+    "key": "Fixation is when one allele is all that remains — the square's edge case and a population's loss.",
+    "why": "When every parent passes the same allele, every box reads the same and the other allele is gone from the population. Its possibilities disappear with it.",
+    "mistake": "Confusing fixation with uniform individuals. A fixed population can still vary in other traits; fixation is about this one locus.",
+    "worked": {
+      "q": "AA × AA: what does the square read, and what is lost?",
+      "steps": [
+        "All four boxes read AA — dominant fraction 1.",
+        "The a allele is absent from every offspring.",
+        "Only new mutation could bring it back."
+      ],
+      "a": "Fixed at A; a is gone without mutation."
+    },
+    "sources": ["OpenStax Biology 2e, population genetics"],
+    "prereqs": ["bio.us.carrier"]
+  },
+  "stats.p.chart": {
+    "key": "Each sample mean comes from n measurements; small piles jump, large piles agree.",
+    "why": "A sample mean averages n draws, so its randomness shrinks with n. The pile of means is the distribution of that average across repeated samples.",
+    "mistake": "Reading each bar as one data point. Each bar is one whole sample squeezed into a single number.",
+    "worked": {
+      "q": "Why does the pile's centre settle while its edges keep moving?",
+      "steps": [
+        "The centre tracks the population mean — the target.",
+        "Each new sample still has its own luck.",
+        "More samples: the centre stabilises, the scatter tells the spread."
+      ],
+      "a": "The centre converges; individual samples keep their luck."
+    },
+    "sources": ["OpenStax Introductory Statistics, CLT"],
+    "prereqs": ["stats.p.draw"]
+  },
+  "stats.ls.n": {
+    "key": "The white curve is predicted before any bar lands: its position comes from the population's known mean and spread.",
+    "why": "The central limit theorem says the pile of sample means will be normal with mean μ and spread σ/√n. That prediction needs no data — it is why the curve is drawn first.",
+    "mistake": "Assuming the curve is fitted to the bars. It is computed from theory; the bars merely obey or disobey it.",
+    "worked": {
+      "q": "Predicted spread is σ/√n. With σ = 25 and n = 25, what is it?",
+      "steps": [
+        "√25 = 5.",
+        "25 / 5 = 5.",
+        "Ten times tighter than single measurements."
+      ],
+      "a": "5 — the mean of 25 beats one measurement by tenfold."
+    },
+    "sources": ["OpenStax Introductory Statistics, CLT"],
+    "prereqs": ["stats.p.chart"]
+  },
+  "stats.us.detect": {
+    "key": "A difference is detectable when the gap is at least two standard errors on this scale.",
+    "why": "The question a test answers is not 'different or not?' but 'is the gap too large to blame on noise?'. Two SEs is the conventional line where noise becomes an unlikely excuse.",
+    "mistake": "Believing any difference between numbers is a finding. A 3-point gap can be pure noise; the SE count is what grades it.",
+    "worked": {
+      "q": "Hypothesis 50, true 58 — is the 8-point gap detectable here?",
+      "steps": [
+        "On this scale one SE = 5 points.",
+        "8 / 5 = 1.6 SE — under two.",
+        "Not detectable yet: widen the gap or shrink the noise."
+      ],
+      "a": "No — 1.6 standard errors is short of the line."
+    },
+    "sources": ["OpenStax Introductory Statistics, hypothesis testing"],
+    "prereqs": ["stats.hypothesis"]
+  },
+  "stats.uni.doubt": {
+    "key": "Significance is a dial on the gap, not a stamp of truth — watch how fast doubt returns as the hypothesis moves.",
+    "why": "The SE count is gap ÷ 5 on this scale. Every point you move the hypothesis toward the truth spends detectability; every point away buys it back.",
+    "mistake": "Treating 'detectable' as a property of the world. It is a property of the gap relative to the noise — and the dial moves both ways.",
+    "worked": {
+      "q": "True mean 70. Where must the hypothesis sit for exactly three SEs?",
+      "steps": [
+        "3 SEs = 15 points on this scale.",
+        "70 − 15 = 55.",
+        "Anything closer than 55 drops below three."
+      ],
+      "a": "At 55 — the boundary of that claim."
+    },
+    "sources": ["OpenStax Introductory Statistics, hypothesis testing"],
+    "prereqs": ["stats.us.detect"]
+  },
+  "cli.p.blanket": {
+    "key": "Lower emissivity means a warmer surface: the greenhouse effect in one slider.",
+    "why": "The surface must radiate exactly the absorbed sunlight. Lower ε means each kelvin sheds less, so the balance happens at a higher temperature.",
+    "mistake": "Confusing emissivity with albedo. Albedo reflects sunlight before it is absorbed; emissivity decides how easily the absorbed heat escapes afterwards.",
+    "worked": {
+      "q": "Why does the model start colder at ε = 0.65 than at 0.61?",
+      "steps": [
+        "Absorbed sunlight is unchanged.",
+        "Higher ε radiates more per kelvin.",
+        "Balance lands at a lower temperature."
+      ],
+      "a": "Because a better radiator is a cooler planet."
+    },
+    "sources": ["OpenStax Astronomy 2e, planetary climates"],
+    "prereqs": ["cli.p.sun"]
+  },
+  "cli.ls.solar": {
+    "key": "Solar output is the budget's income: a five per cent dimming moves the temperature by several degrees.",
+    "why": "Temperature scales with the fourth root of absorbed power, so a 5% change in the Sun is not a 5% change in warmth — it is a few whole degrees.",
+    "mistake": "Assuming small percentage changes stay small after the physics. The fourth-root softens but does not erase them; five per cent of sunlight is a lot of climate.",
+    "worked": {
+      "q": "Sun at 0.95: about how much colder than today's 14.9 °C?",
+      "steps": [
+        "T scales as S^¼.",
+        "0.95^0.25 ≈ 0.987 on the kelvin scale.",
+        "288 K × 0.987 ≈ 284.3 K ≈ 11.2 °C."
+      ],
+      "a": "About 3.7 °C colder — for five per cent less sun."
+    },
+    "sources": ["OpenStax Astronomy 2e, planetary climates"],
+    "prereqs": ["cli.p.blanket"]
+  },
+  "cli.us.radiate": {
+    "key": "Balance is mandatory: in equals out, and temperature is how the planet pays.",
+    "why": "If the surface radiates less than it absorbs, it warms until the books balance; if it radiates more, it cools. ε decides how many watts each kelvin can shed.",
+    "mistake": "Looking for a 'reason' the temperature settles other than the balance itself. There is no thermostat — only accounting.",
+    "worked": {
+      "q": "Why is a high-ε planet cold in this model?",
+      "steps": [
+        "Absorbed power is fixed by the Sun and albedo.",
+        "Radiated power = εσT⁴.",
+        "Higher ε → the same watts shed at a lower T."
+      ],
+      "a": "Because each kelvin now sheds more watts."
+    },
+    "sources": ["OpenStax Astronomy 2e, planetary climates"],
+    "prereqs": ["cli.ls.solar"]
+  },
+  "cli.uni.forcing": {
+    "key": "Forcings add: two pushes on the same balance combine, and their sum — not the larger one — sets the temperature.",
+    "why": "Absorbed power and radiated efficiency enter the same equilibrium equation. Each knob moves the balance point independently, and the readout shows the total.",
+    "mistake": "Arguing about which single cause 'really' matters. The climate answers the sum, which is why attribution counts every term.",
+    "worked": {
+      "q": "Solar 1.02 plus ε 0.59 — warmer or colder than the default?",
+      "steps": [
+        "Default: 14.9 °C.",
+        "Solar 1.02 alone: 16.3; ε 0.59 alone: 17.3.",
+        "Together: about 18.8 — the pushes add."
+      ],
+      "a": "Warmer, by more than either alone."
+    },
+    "sources": ["OpenStax Astronomy 2e, planetary climates"],
+    "prereqs": ["cli.us.radiate"]
+  },
+  "eng.us.truss": {
+    "key": "A triangle cannot change shape without stretching a member — that rigidity is why trusses work.",
+    "why": "Every joint is in equilibrium: eighteen equations solved for eighteen unknowns. The geometry of triangles is what keeps those equations solvable and the structure stiff.",
+    "mistake": "Reading member thicknesses as decoration. Each area changes real forces everywhere in the structure, because the solve is global.",
+    "worked": {
+      "q": "Why does the bottom chord carry the most tension?",
+      "steps": [
+        "The load pulls the middle of the span down.",
+        "The bottom stretches like the string of a bow; the top squeezes like the wood.",
+        "Equilibrium at the joints assigns the rest to the diagonals."
+      ],
+      "a": "Because it is the bowstring of the whole span."
+    },
+    "sources": ["OpenStax University Physics, statics", "TeddyRookBook curriculum, Trades"],
+    "prereqs": ["eng.ls.cost"]
+  },
+  "fin.p.five": {
+    "key": "Staying in budget is a running total: every tap adds a price, and the counter keeps you honest.",
+    "why": "A budget is not a feeling; it is spent ≤ budget, updated after every decision. Small prices add up — five apples are cheap, but the habit of counting is the point.",
+    "mistake": "Paying attention only to single prices, never the running sum. The total is the constraint; the individual prices are just inputs.",
+    "worked": {
+      "q": "Budget $12. You buy an apple ($0.60) five times and bread ($2.40) twice. Spent?",
+      "steps": [
+        "5 × 0.60 = 3.00.",
+        "2 × 2.40 = 4.80.",
+        "Total 7.80 — seven items, still in budget."
+      ],
+      "a": "$7.80 spent, seven items, still in budget."
+    },
+    "sources": ["TeddyRookBook curriculum, Being an Adult 101"],
+    "prereqs": ["fin.p.shop"]
+  },
+  "mat.ls.ratio": {
+    "key": "A ratio is a sharing rule; when it does not divide evenly, the remainder is where fractions begin.",
+    "why": "10 into 5 gives two each with nothing over; 12 into 5 cannot be fair in whole numbers. The leftover is not failure — it is the first fraction, staring at you.",
+    "mistake": "Treating remainders as mistakes to avoid. A remainder is information: the ratio is not a whole number, and a new kind of number is needed.",
+    "worked": {
+      "q": "12 objects, 5 groups: how many per group if every group stays even?",
+      "steps": [
+        "Two per group uses 10.",
+        "Two objects remain.",
+        "2/5 of a group-size each — the fraction 2/5."
+      ],
+      "a": "Two each, remainder two — i.e. 2.4 per group."
+    },
+    "sources": ["TeddyRookBook curriculum, Math — fractions sequence"],
+    "prereqs": ["mat.p.share"]
+  },
+  "phy.p.newton1": {
+    "key": "With no net push, motion does not fade — the readout only moves while something feeds it.",
+    "why": "The model computes the two-second run from the current force, so force zero means nothing added: the readout sits at zero. In the world, a coasting ball keeps coasting; friction is what stops it, not nature.",
+    "mistake": "Believing objects 'naturally' slow down and stop. Aristotle's intuition dies hard: motion needs no cause to continue, only to change.",
+    "worked": {
+      "q": "A puck slides on frictionless ice at 3 m/s. What is its speed one second later, with nothing touching it?",
+      "steps": [
+        "No net force means no acceleration.",
+        "Velocity stays 3 m/s — Newton's first law.",
+        "Only a push or a drag could change it."
+      ],
+      "a": "3 m/s — unchanged."
+    },
+    "sources": ["OpenStax College Physics, Newton's laws"],
+    "prereqs": ["phy.p.push"]
+  },
+  "phy.ls.two": {
+    "key": "One outcome, many recipes: every force–mass pair with the same ratio lands in the same place.",
+    "why": "Distance depends on F/m, not on F and m separately. Recognising equivalence classes — different pairs, same quotient — is the step from arithmetic to algebra.",
+    "mistake": "Hunting for the 'right' force as if mass were a distraction. Mass is not noise in the recipe; it is the second ingredient of the same fraction.",
+    "worked": {
+      "q": "Which pairs give the same two-second run as 3 N on 1 kg?",
+      "steps": [
+        "The run depends on F/m = 3.",
+        "6 N on 2 kg: 6/2 = 3 — same run.",
+        "9 N on 3 kg: 9/3 = 3 — same run."
+      ],
+      "a": "Any pair with F/m = 3 — 6/2, 9/3, 4.5/1.5…"
+    },
+    "sources": ["OpenStax College Physics, dynamics"],
+    "prereqs": ["phy.ls.heavy"]
+  },
+  "phy.uni.energy": {
+    "key": "Force times distance is the energy the motion keeps: W = F·d = ½mv², to the joule.",
+    "why": "The work ledger and the kinematics agree because they are the same statement in two languages. Doubling the run doubles the work and quadruples the speed squared.",
+    "mistake": "Thinking energy and force are the same kind of thing. Force is a push at an instant; energy is the budget that push deposits over a distance.",
+    "worked": {
+      "q": "Force 4 N pushes a 1 kg ball through 8 m. Find the work and the final speed.",
+      "steps": [
+        "W = F·d = 4 × 8 = 32 J.",
+        "½mv² = W → v² = 64.",
+        "v = 8 m/s — exactly what a = 4 m/s² builds in two seconds."
+      ],
+      "a": "32 J; v = 8 m/s."
+    },
+    "sources": ["OpenStax College Physics, work and energy"],
+    "prereqs": ["phy.us.newton2"]
+  },
+  "mat.p.count": {
+    "key": "A fair share is the count that makes every group equal — and it is multiplication read backwards.",
+    "why": "12 dots in 3 equal baskets is 4 in each, which is the same fact as 3 × 4 = 12. Sharing, grouping and multiplying are one structure seen from different sides.",
+    "mistake": "Treating sharing as a separate operation from multiplying. The remainder-free share is exactly the missing factor in the times table.",
+    "worked": {
+      "q": "12 dots, 3 baskets, fair share. What multiplication fact does the answer hide?",
+      "steps": [
+        "Each basket holds 4.",
+        "3 baskets × 4 = 12 — the share reversed.",
+        "Nothing left over, so the fact is exact."
+      ],
+      "a": "3 × 4 = 12."
+    },
+    "sources": ["TeddyRookBook curriculum, Math — counting sequence"],
+    "prereqs": ["mat.p.share"]
+  },
+  "eng.ls.triangle": {
+    "key": "A triangle is the only polygon that cannot fold — its rigidity is why every truss is a mesh of them.",
+    "why": "Fix three side lengths and the angles are forced; a quadrilateral can flex forever without any member stretching. Bracing turns every panel into triangles.",
+    "mistake": "Assuming stiffness comes from thick members alone. A thin triangle out-stiffens a thick square frame, because geometry — not bulk — does the locking.",
+    "worked": {
+      "q": "Why does a square gate sag diagonally while a braced one does not?",
+      "steps": [
+        "A square can shear into a parallelogram with all four sides unchanged.",
+        "The diagonal turns the square into two triangles.",
+        "Triangles cannot shear without stretching a member."
+      ],
+      "a": "The diagonal brace locks the geometry."
+    },
+    "sources": ["OpenStax University Physics, statics", "TeddyRookBook curriculum, Trades"],
+    "prereqs": ["eng.p.bridge"]
+  },
+  "fin.ls.percent": {
+    "key": "A percentage always answers 'of what?' — the budget is the whole, every receipt is a slice.",
+    "why": "The same $8 is 40% of $20 and 8% of $100. The number on the receipt is meaningless until the whole is named; the fraction is the honest quantity.",
+    "mistake": "Reading percentages as absolute amounts. 'Ten per cent off' of a small budget and a large one are different discounts.",
+    "worked": {
+      "q": "You spend $8 of a $20 budget. What fraction is left, and what percentage?",
+      "steps": [
+        "Left: 20 − 8 = $12.",
+        "Fraction left: 12/20 = 0.6.",
+        "Percentage left: 60% — spent 40%."
+      ],
+      "a": "$12 left, which is 60% of the budget."
+    },
+    "sources": ["TeddyRookBook curriculum, Being an Adult 101"],
+    "prereqs": ["fin.p.shop"]
+  },
+  "fin.uni.seventy": {
+    "key": "72/r is a shortcut for ln 2 ÷ ln(1 + r) — know which one you are holding.",
+    "why": "Exact doubling time is a logarithm; 72 is the integer that nearly matches it across everyday rates (and divides pleasantly). The rule is for thinking, the logarithm for checking.",
+    "mistake": "Treating the rule of 72 as exact law. At high rates the shortcut drifts: 72/24 = 3, but a 24% return takes ln 2 ÷ ln 1.24 ≈ 3.2 years.",
+    "worked": {
+      "q": "Which is the exact doubling time at 8%: 72/8 or ln 2 ÷ ln(1.08)?",
+      "steps": [
+        "72 ÷ r at 8% says 9.0 years.",
+        "Exact: ln 2 ÷ ln 1.08 = 0.693 ÷ 0.0770 ≈ 9.0 years — the rule lands on it.",
+        "At 4%: rule says 18, exact is 17.7 — the shortcut is a rounded shadow of the logarithm."
+      ],
+      "a": "The logarithm is exact; 72/r is its rounded shadow — off by days at everyday rates."
+    },
+    "sources": ["OpenStax Introductory Statistics, exponential growth", "TeddyRookBook curriculum, Being an Adult 101"],
+    "prereqs": ["fin.us.double"]
+  },
+  "lang.uni.question": {
+    "key": "Written Spanish announces a question before its first word: the opening ¿ is grammar, not decoration.",
+    "why": "English hearers learn questions from tone; Spanish readers get the sign upfront. The inverted mark lets the brain set its parser to 'question' before parsing begins.",
+    "mistake": "Treating the ¿ as typographic flourish and skipping it when writing. It carries the sentence's mode — drop it and the sentence still parses but misleads.",
+    "worked": {
+      "q": "Where does Spanish place its first question signal in '¿Dónde está la biblioteca?'",
+      "steps": [
+        "Before the first word — the opening ¿.",
+        "The closing ? marks the end.",
+        "The question word 'dónde' follows immediately, front-loaded."
+      ],
+      "a": "At the very start — the reader is warned before reading."
+    },
+    "sources": ["TeddyRookBook curriculum, Languages"],
+    "prereqs": ["lang.order"]
+  },
+  "lang.uni.agree": {
+    "key": "One ending can carry two facts at once: who acts and when — morphology is compressed grammar.",
+    "why": "In 'comemos', -emos says we + present in a single suffix. English spends separate words for person and tense; Spanish fuses them, which is why the tiles lock so tightly.",
+    "mistake": "Translating word by word and losing the ending's double duty. A learner who swaps comemos for como changes two facts with one tile.",
+    "worked": {
+      "q": "What two facts does the ending of 'comemos' encode, and what changes with 'como'?",
+      "steps": [
+        "-emos: first person plural (we).",
+        "-emos: present tense (eat, now).",
+        "como: first person singular — same tense, different doer."
+      ],
+      "a": "We + present; 'como' keeps the tense and drops the 'we'."
+    },
+    "sources": ["TeddyRookBook curriculum, Languages"],
+    "prereqs": ["lang.ls.four"]
+  },
+  "cs.p.repeat": {
+    "key": "One pass of bubble sort is one tiny decision repeated n−1 times — the loop is the algorithm.",
+    "why": "Compare, maybe swap, step, repeat: nothing else happens. Every 'clever' algorithm in computing is this shape with a smarter policy for what to repeat.",
+    "mistake": "Watching the animation as motion rather than as repetition. Counting the comparisons turns a moving picture into a program.",
+    "worked": {
+      "q": "One full pass over eight items compares how many pairs? And two passes?",
+      "steps": [
+        "Eight items have seven adjacent pairs.",
+        "Pass one: 7. Pass two: 6 (the last item is already final).",
+        "Repetition with a shrinking boundary."
+      ],
+      "a": "7, then 6 — the pass shrinks as the tail locks."
+    },
+    "sources": ["TeddyRookBook curriculum, Robotics"],
+    "prereqs": ["cs.p.sequence"]
+  },
+  "cs.uni.invariant": {
+    "key": "After pass k, the last k items are final and never move again — the loop invariant that makes bubble sort provable.",
+    "why": "An invariant is the claim that stays true while a loop runs. It is what lets you reason about the whole run from one repeated fact, instead of replaying every step.",
+    "mistake": "Confusing the invariant with the goal. 'The tail is sorted' holds midway through; 'the array is sorted' holds only at the end.",
+    "worked": {
+      "q": "After two full passes on a 12-item array, how many items are guaranteed in final position?",
+      "steps": [
+        "Pass one locks the largest item at the end.",
+        "Pass two locks the second largest.",
+        "After pass k, k items are final."
+      ],
+      "a": "2 items — and 66 total comparisons remain to finish."
+    },
+    "sources": ["TeddyRookBook curriculum, Robotics", "CLRS-style loop invariants"],
+    "prereqs": ["cs.ls.loop"]
+  },
+  "cs.uni.split": {
+    "key": "Binary search's cost is log₂ n: each question halves what is left, so doubling the list adds one question.",
+    "why": "64 → 32 → 16 → 8 → 4 → 2 → 1 is six halvings. The count grows with the logarithm because halving is multiplication's inverse: you need one more question per doubling.",
+    "mistake": "Assuming twice the data needs twice the questions. Halving strategies grow logarithmically — the whole reason indexing works.",
+    "worked": {
+      "q": "How many binary questions for 1,000,000 sorted items?",
+      "steps": [
+        "2^19 ≈ 524,288; 2^20 ≈ 1,048,576.",
+        "So 20 halvings cover a million.",
+        "Twenty questions — not a million."
+      ],
+      "a": "At most 20."
+    },
+    "sources": ["TeddyRookBook curriculum, Robotics"],
+    "prereqs": ["cs.search.binary"]
+  },
+  "earth.p.coastline": {
+    "key": "The coastline barely moves across centuries; the borders painted over it are dated claims.",
+    "why": "Physical layers (coasts, terrain) and political layers (borders, names, memberships) live on the same map at different speeds. The timeline rewinds the political stack, not the geology.",
+    "mistake": "Reading a historical map's outline as the border of the time. The outline is the land; the line is the law, and each has its own date.",
+    "worked": {
+      "q": "A dossier from 1800 shows a smaller country than the 2020 one. What almost certainly did not change?",
+      "steps": [
+        "The coastline — physical, slow.",
+        "The border — political, dated.",
+        "The name — political, dated."
+      ],
+      "a": "The coastline; the rest are claims that changed."
+    },
+    "sources": ["TeddyRookBook curriculum, Geography", "Natural Earth 110m dataset (geometry)"],
+    "prereqs": ["earth.p.place"]
+  },
+  "earth.uni.geopol": {
+    "key": "A geographic argument names a place, a date and a layer — evidence only argues when all three are honest.",
+    "why": "Every map claim is a stack of dated layers. Choosing which year and which layer to cite is the argument; mixing years is not analysis but storytelling.",
+    "mistake": "Picking the year that proves the point. A claim built on one cherry-picked date collapses the moment a second date is added.",
+    "worked": {
+      "q": "You want to argue a region's borders were contested. Which dossier pair makes the case?",
+      "steps": [
+        "Same region, two dates.",
+        "Show the border layer changing between them.",
+        "Coastline and terrain as the unchanged controls."
+      ],
+      "a": "Two dated dossiers of one region — change against constancy."
+    },
+    "sources": ["TeddyRookBook curriculum, Geography"],
+    "prereqs": ["earth.uni.atlas"]
+  },
+  "mus.p.keys": {
+    "key": "The keyboard is an alphabet of twelve pitches; playing is spelling with them.",
+    "why": "Twelve keys repeat at every octave like letters repeating on every page. Knowing the alphabet — and that every press counts — is the ground reading music stands on.",
+    "mistake": "Treating the keyboard as a toy for hunting sounds. Twelve named pitches, learned cold, is what turns hunting into speaking.",
+    "worked": {
+      "q": "How many distinct pitch names does a piano keyboard hold per octave, and what repeats at the octave?",
+      "steps": [
+        "Twelve: seven white, five black.",
+        "The pattern of names repeats every octave.",
+        "The octave is the same alphabet, one register up."
+      ],
+      "a": "Twelve names, repeating at each octave."
+    },
+    "sources": ["OpenStax Music, pitch and notation", "TeddyRookBook curriculum, Piano Basics"],
+    "prereqs": ["mus.beat"]
+  },
+  "mus.uni.octave": {
+    "key": "The octave is the ratio 2:1, and the cents scale calls it 1200 — the ruler every other interval is measured against.",
+    "why": "Cents are a logarithmic ruler: 1200 per factor of two. Because the octave is the one interval the ear hears as 'the same note, higher', it becomes the unit of interval measurement.",
+    "mistake": "Thinking an octave is twelve 'equal things' added together. Ratios multiply; the twelve equal steps are equal in logs, not in hertz.",
+    "worked": {
+      "q": "A note at 330 Hz sits how many cents below 660 Hz?",
+      "steps": [
+        "330/660 = 0.5 — exactly one octave down.",
+        "Cents = 1200·log₂(0.5) = −1200.",
+        "One octave, by definition."
+      ],
+      "a": "1200 cents below — a full octave."
+    },
+    "sources": ["OpenStax Music, tuning systems", "TeddyRookBook curriculum, Piano Basics"],
+    "prereqs": ["mus.tuning.beats"]
+  },
+  "astro.ls.scale": {
+    "key": "Every diagram is a deal: something is traded for legibility, and an orrery trades true distance.",
+    "why": "At true scale the inner planets are grains beside a giant emptiness — honest but useless on a screen. Compressed scale keeps all planets visible at the cost of proportion.",
+    "mistake": "Reading any planet diagram as to-scale. Almost none are; the sizes and gaps are arranged for visibility, not truth.",
+    "worked": {
+      "q": "The Sun is about 109 Earth-diameters wide and 11,700 Earth-diameters from Earth. What does a page-sized orrery have to give up?",
+      "steps": [
+        "Both facts cannot fit one picture at one scale.",
+        "Choose size truth → Earth is a dot too far away to draw.",
+        "Choose distance truth → the Sun is too big to draw."
+      ],
+      "a": "One of the two — which is why the deal must be stated."
+    },
+    "sources": ["OpenStax Astronomy 2e"],
+    "prereqs": ["astro.ls.solar"]
+  },
+  "astro.uni.clock": {
+    "key": "Orbital periods are an exchange rate: 165 Earth years per Neptune lap, and any window converts by it.",
+    "why": "Kepler's third law sets each planet's period; once known, the periods convert between planetary calendars exactly. Reading one clock is reading them all.",
+    "mistake": "Treating 'a Neptune year' as vague poetry. It is a defined unit: 164.8 Earth years, measurable and convertible.",
+    "worked": {
+      "q": "How many Neptune orbits fit in 495 Earth years?",
+      "steps": [
+        "One Neptune orbit ≈ 165 Earth years.",
+        "495 / 165 = 3.",
+        "Exactly three laps."
+      ],
+      "a": "3 Neptune orbits."
+    },
+    "sources": ["OpenStax Astronomy 2e", "TeddyRookBook curriculum, Astronomy"],
+    "prereqs": ["astro.uni.kepler"]
+  },
+  "bio.p.trait": {
+    "key": "A trait is a number and the population is a cloud of its versions — selection moves the cloud, mutation refills it.",
+    "why": "No two individuals sit at the same value. When the optimum moves, each dot responds through its own version of the trait, and the cloud re-centres dot by dot.",
+    "mistake": "Thinking of a species' trait as one value. The mean is a summary of the cloud, not the cloud itself.",
+    "worked": {
+      "q": "The optimum shifts right. What happens to the cloud over many generations?",
+      "steps": [
+        "Dots nearer the new optimum leave more offspring.",
+        "The cloud's centre drifts right.",
+        "Mutation keeps the cloud wide enough to keep adapting."
+      ],
+      "a": "It re-centres on the new optimum, still spread."
+    },
+    "sources": ["OpenStax Biology 2e, population genetics"],
+    "prereqs": ["bio.p.living"]
+  },
+  "bio.uni.testcross": {
+    "key": "State the fractions before you look: one A-parent and one a-parent give three boxes carrying A and two mixed.",
+    "why": "The grid reads 11, 10, 01, 00: three boxes hold at least one dominant allele and two are mixed. Prediction-first turns the square from a picture into a test.",
+    "mistake": "Reading the square as four independent coin flips. The parent's contribution is fixed; only the pairing grid varies — that is why the fractions are exact.",
+    "worked": {
+      "q": "One parent passes A, the other a. What is the heterozygous fraction, and what does the textbook Aa × aa cross give as a phenotype split?",
+      "steps": [
+        "Grid: 11, 10, 01, 00 — two mixed boxes of four.",
+        "Heterozygous fraction 0.5.",
+        "The textbook Aa × aa cross gives a 50/50 phenotype split, the same half."
+      ],
+      "a": "0.5 — half mixed, in the grid and in the textbook."
+    },
+    "sources": ["OpenStax Biology 2e, Mendelian genetics"],
+    "prereqs": ["bio.us.carrier"]
+  },
+  "stats.p.n": {
+    "key": "The predicted spread of sample means is σ/√n — averaging is the cheapest accuracy there is.",
+    "why": "Averaging n independent measurements divides their scatter by √n before a single sample lands. The prediction readout shows the promise; the pile keeps it.",
+    "mistake": "Believing accuracy costs effort proportionally. Four times the data buys only half the spread — the square root is a hard currency.",
+    "worked": {
+      "q": "σ = 30. What n drives the predicted spread to 3?",
+      "steps": [
+        "30/√n = 3.",
+        "√n = 10.",
+        "n = 100 — the maximum on this dial."
+      ],
+      "a": "n = 100."
+    },
+    "sources": ["OpenStax Introductory Statistics, CLT"],
+    "prereqs": ["stats.p.chart"]
+  },
+  "stats.uni.law": {
+    "key": "The average of many draws converges; the next draw never does — the gambler's fallacy is the confusion of the two.",
+    "why": "The law of large numbers says the running mean approaches the true mean as samples accumulate. It says nothing about short-run balancing: after ten reds, the wheel's odds are unchanged.",
+    "mistake": "Believing results 'even out soon'. Averages are patient; single events have no memory.",
+    "worked": {
+      "q": "A fair coin has landed heads ten times. What is the chance the next flip is tails?",
+      "steps": [
+        "Coins have no memory.",
+        "P(tails) = 0.5, as always.",
+        "The long-run average converges; the next flip does not."
+      ],
+      "a": "0.5 — the streak owes you nothing."
+    },
+    "sources": ["OpenStax Introductory Statistics, law of large numbers"],
+    "prereqs": ["stats.pile"]
+  },
+  "cli.p.weather": {
+    "key": "Weather is the day; climate is the habit — averages are how a planet keeps its diary.",
+    "why": "A single hot afternoon proves nothing about the climate; the summer-and-winter averages, held over years, are the record that shifts. The seasonal swing shows both layers at once.",
+    "mistake": "Arguing climate from one memorable day. 'Coldest winter ever' and a warming climate are compatible; the average, not the anecdote, is the claim.",
+    "worked": {
+      "q": "One July is 2 °C hotter than any before it. Does that prove the climate shifted?",
+      "steps": [
+        "One month is weather — noise.",
+        "Check the trend across decades of July averages — a shift shows in the habit, not the day.",
+        "Only the long-run mean moving is climate."
+      ],
+      "a": "No — one month is weather; the trend is the claim."
+    },
+    "sources": ["NASA Climate Kids", "OpenStax Astronomy 2e, planetary climates"],
+    "prereqs": ["cli.p.sun"]
+  },
+  "cli.uni.attribute": {
+    "key": "Attribution is one-knob-at-a-time: restore the balance by naming the single cause, or you have named nothing.",
+    "why": "Several knobs can move the same readout. Changing one at a time is the only way to assign the change to a cause rather than to the noise of everything at once.",
+    "mistake": "Crediting the loudest knob. Attribution is an experiment, not an impression — the discipline that separates 'it warmed' from 'the Sun did it'.",
+    "worked": {
+      "q": "Solar 1.02 and ε 0.63 together warm the surface. How do you find which contributed what?",
+      "steps": [
+        "Reset both to defaults.",
+        "Move solar alone: read the shift.",
+        "Move ε alone: read the shift. The two add."
+      ],
+      "a": "Two one-knob experiments, then the sum."
+    },
+    "sources": ["OpenStax Astronomy 2e, planetary climates"],
+    "prereqs": ["cli.uni.forcing"]
+  },
+  "chem.p.walk": {
+    "key": "The proton count names the element: one proton is the difference between the gas in you and the gas in a balloon.",
+    "why": "Hydrogen has one proton, helium two — different elements entirely, not variants. Walking the atomic number is walking the periodic table's index; every step is a new name.",
+    "mistake": "Confusing the neutron count with the element. Isotopes are the same element; Z + 1 is a different one.",
+    "worked": {
+      "q": "Element 1 is hydrogen. What is element 2, and by what exactly do they differ?",
+      "steps": [
+        "Element 2 is helium.",
+        "One proton more — Z = 2 vs Z = 1.",
+        "Different elements, different chemistry."
+      ],
+      "a": "Helium; one proton."
+    },
+    "sources": ["OpenStax Chemistry 2e, ch. 1"],
+    "prereqs": ["chem.p.material"]
+  },
+  "chem.uni.predict": {
+    "key": "N = A − Z: isotope names are subtraction dressed as notation.",
+    "why": "The name says the mass number A; the element fixes Z. Everything else follows by one subtraction — which is why a named isotope fully determines its nuclear inventory.",
+    "mistake": "Treating isotope notation as memorised trivia. Carbon-14's neutron count is not a fact to recall; it is 14 − 6, computed.",
+    "worked": {
+      "q": "Carbon-14 has 6 protons. How many neutrons, and why is it still carbon?",
+      "steps": [
+        "N = A − Z = 14 − 6 = 8.",
+        "Still carbon because Z = 6 fixes the element.",
+        "The two extra neutrons (vs carbon-12) are what make it radioactive."
+      ],
+      "a": "8 neutrons; carbon because the protons say so."
+    },
+    "sources": ["OpenStax Chemistry 2e, nuclei and isotopes"],
+    "prereqs": ["chem.us.count"]
+  },
+  "art.ls.value": {
+    "key": "Light, middle, dark: the middle value's job is turning surfaces toward or away from the light.",
+    "why": "Extremes frame the drawing; the intermediate step is what makes a flat shape read as a form catching light. Value is the grammar of seeing structure.",
+    "mistake": "Thinking values are shades of grey to fill in. Each step is a statement about a surface's angle to the light source.",
+    "worked": {
+      "q": "A sphere shows values 90, 50 and 10. What does the 50 region describe?",
+      "steps": [
+        "90: facing the light.",
+        "10: turned away.",
+        "50: the surface angled part-way — the turn."
+      ],
+      "a": "The turning surface — form, not fill."
+    },
+    "sources": ["TeddyRookBook curriculum, Drawing Basics"],
+    "prereqs": ["art.three"]
+  },
+  "art.us.contrast": {
+    "key": "The eye enters where the widest value gap sits — contrast is a steering wheel, so place it on purpose.",
+    "why": "Vision is drawn to the sharpest difference available. The artist who knows this puts the gap where the story starts, instead of leaving it to accident.",
+    "mistake": "Spreading contrast evenly so 'everything is interesting'. Even contrast gives the eye no door, and the drawing reads as texture.",
+    "worked": {
+      "q": "Your drawing's values run 20–80 everywhere except one spot at 5 against 95. Where does the viewer look first?",
+      "steps": [
+        "The widest local gap is 5 vs 95.",
+        "The eye lands there before anywhere else.",
+        "If that is not the subject, the drawing misspeaks."
+      ],
+      "a": "At the 5-vs-95 spot — by construction."
+    },
+    "sources": ["TeddyRookBook curriculum, Colour and Design"],
+    "prereqs": ["art.five"]
+  },
+  "phy.p.newton1": {
+    "key": "With no net push, motion does not fade — the readout only moves while something feeds it.",
+    "why": "The model computes the two-second run from the current force, so force zero means nothing added: the readout sits at zero. In the world, a coasting ball keeps coasting; friction is what stops it, not nature.",
+    "mistake": "Believing objects 'naturally' slow down and stop. Aristotle's intuition dies hard: motion needs no cause to continue, only to change.",
+    "worked": {
+      "q": "A puck slides on frictionless ice at 3 m/s. What is its speed one second later, with nothing touching it?",
+      "steps": [
+        "No net force means no acceleration.",
+        "Velocity stays 3 m/s — Newton's first law.",
+        "Only a push or a drag could change it."
+      ],
+      "a": "3 m/s — unchanged."
+    },
+    "sources": ["OpenStax College Physics, Newton's laws"],
+    "prereqs": ["phy.p.push"]
+  },
+  "phy.ls.two": {
+    "key": "One outcome, many recipes: every force–mass pair with the same ratio lands in the same place.",
+    "why": "Distance depends on F/m, not on F and m separately. Recognising equivalence classes — different pairs, same quotient — is the step from arithmetic to algebra.",
+    "mistake": "Hunting for the 'right' force as if mass were a distraction. Mass is not noise in the recipe; it is the second ingredient of the same fraction.",
+    "worked": {
+      "q": "Which pairs give the same two-second run as 3 N on 1 kg?",
+      "steps": [
+        "The run depends on F/m = 3.",
+        "6 N on 2 kg: 6/2 = 3 — same run.",
+        "9 N on 3 kg: 9/3 = 3 — same run."
+      ],
+      "a": "Any pair with F/m = 3 — 6/2, 9/3, 4.5/1.5…"
+    },
+    "sources": ["OpenStax College Physics, dynamics"],
+    "prereqs": ["phy.ls.heavy"]
+  },
+  "phy.uni.energy": {
+    "key": "Force times distance is the energy the motion keeps: W = F·d = ½mv², to the joule.",
+    "why": "The work ledger and the kinematics agree because they are the same statement in two languages. Doubling the run doubles the work and quadruples the speed squared.",
+    "mistake": "Thinking energy and force are the same kind of thing. Force is a push at an instant; energy is the budget that push deposits over a distance.",
+    "worked": {
+      "q": "Force 4 N pushes a 1 kg ball through 8 m. Find the work and the final speed.",
+      "steps": [
+        "W = F·d = 4 × 8 = 32 J.",
+        "½mv² = W → v² = 64.",
+        "v = 8 m/s — exactly what a = 4 m/s² builds in two seconds."
+      ],
+      "a": "32 J; v = 8 m/s."
+    },
+    "sources": ["OpenStax College Physics, work and energy"],
+    "prereqs": ["phy.us.newton2"]
+  },
+  "mat.p.count": {
+    "key": "A fair share is the count that makes every group equal — and it is multiplication read backwards.",
+    "why": "12 dots in 3 equal baskets is 4 in each, which is the same fact as 3 × 4 = 12. Sharing, grouping and multiplying are one structure seen from different sides.",
+    "mistake": "Treating sharing as a separate operation from multiplying. The remainder-free share is exactly the missing factor in the times table.",
+    "worked": {
+      "q": "12 dots, 3 baskets, fair share. What multiplication fact does the answer hide?",
+      "steps": [
+        "Each basket holds 4.",
+        "3 baskets × 4 = 12 — the share reversed.",
+        "Nothing left over, so the fact is exact."
+      ],
+      "a": "3 × 4 = 12."
+    },
+    "sources": ["TeddyRookBook curriculum, Math — counting sequence"],
+    "prereqs": ["mat.p.share"]
+  },
+  "eng.ls.triangle": {
+    "key": "A triangle is the only polygon that cannot fold — its rigidity is why every truss is a mesh of them.",
+    "why": "Fix three side lengths and the angles are forced; a quadrilateral can flex forever without any member stretching. Bracing turns every panel into triangles.",
+    "mistake": "Assuming stiffness comes from thick members alone. A thin triangle out-stiffens a thick square frame, because geometry — not bulk — does the locking.",
+    "worked": {
+      "q": "Why does a square gate sag diagonally while a braced one does not?",
+      "steps": [
+        "A square can shear into a parallelogram with all four sides unchanged.",
+        "The diagonal turns the square into two triangles.",
+        "Triangles cannot shear without stretching a member."
+      ],
+      "a": "The diagonal brace locks the geometry."
+    },
+    "sources": ["OpenStax University Physics, statics", "TeddyRookBook curriculum, Trades"],
+    "prereqs": ["eng.p.bridge"]
+  },
+  "fin.ls.percent": {
+    "key": "A percentage always answers 'of what?' — the budget is the whole, every receipt is a slice.",
+    "why": "The same $8 is 40% of $20 and 8% of $100. The number on the receipt is meaningless until the whole is named; the fraction is the honest quantity.",
+    "mistake": "Reading percentages as absolute amounts. 'Ten per cent off' of a small budget and a large one are different discounts.",
+    "worked": {
+      "q": "You spend $8 of a $20 budget. What fraction is left, and what percentage?",
+      "steps": [
+        "Left: 20 − 8 = $12.",
+        "Fraction left: 12/20 = 0.6.",
+        "Percentage left: 60% — spent 40%."
+      ],
+      "a": "$12 left, which is 60% of the budget."
+    },
+    "sources": ["TeddyRookBook curriculum, Being an Adult 101"],
+    "prereqs": ["fin.p.shop"]
+  },
+  "fin.uni.seventy": {
+    "key": "72/r is a shortcut for ln 2 ÷ ln(1 + r) — know which one you are holding.",
+    "why": "Exact doubling time is a logarithm; 72 is the integer that nearly matches it across everyday rates (and divides pleasantly). The rule is for thinking, the logarithm for checking.",
+    "mistake": "Treating the rule of 72 as exact law. At high rates the shortcut drifts: 72/24 = 3, but a 24% return takes ln 2 ÷ ln 1.24 ≈ 3.2 years.",
+    "worked": {
+      "q": "Which is the exact doubling time at 8%: 72/8 or ln 2 ÷ ln(1.08)?",
+      "steps": [
+        "72 ÷ r at 8% says 9.0 years.",
+        "Exact: ln 2 ÷ ln 1.08 = 0.693 ÷ 0.0770 ≈ 9.0 years — the rule lands on it.",
+        "At 4%: rule says 18, exact is 17.7 — the shortcut is a rounded shadow of the logarithm."
+      ],
+      "a": "The logarithm is exact; 72/r is its rounded shadow — off by days at everyday rates."
+    },
+    "sources": ["OpenStax Introductory Statistics, exponential growth", "TeddyRookBook curriculum, Being an Adult 101"],
+    "prereqs": ["fin.us.double"]
+  },
+  "lang.uni.question": {
+    "key": "Written Spanish announces a question before its first word: the opening ¿ is grammar, not decoration.",
+    "why": "English hearers learn questions from tone; Spanish readers get the sign upfront. The inverted mark lets the brain set its parser to 'question' before parsing begins.",
+    "mistake": "Treating the ¿ as typographic flourish and skipping it when writing. It carries the sentence's mode — drop it and the sentence still parses but misleads.",
+    "worked": {
+      "q": "Where does Spanish place its first question signal in '¿Dónde está la biblioteca?'",
+      "steps": [
+        "Before the first word — the opening ¿.",
+        "The closing ? marks the end.",
+        "The question word 'dónde' follows immediately, front-loaded."
+      ],
+      "a": "At the very start — the reader is warned before reading."
+    },
+    "sources": ["TeddyRookBook curriculum, Languages"],
+    "prereqs": ["lang.order"]
+  },
+  "lang.uni.agree": {
+    "key": "One ending can carry two facts at once: who acts and when — morphology is compressed grammar.",
+    "why": "In 'comemos', -emos says we + present in a single suffix. English spends separate words for person and tense; Spanish fuses them, which is why the tiles lock so tightly.",
+    "mistake": "Translating word by word and losing the ending's double duty. A learner who swaps comemos for como changes two facts with one tile.",
+    "worked": {
+      "q": "What two facts does the ending of 'comemos' encode, and what changes with 'como'?",
+      "steps": [
+        "-emos: first person plural (we).",
+        "-emos: present tense (eat, now).",
+        "como: first person singular — same tense, different doer."
+      ],
+      "a": "We + present; 'como' keeps the tense and drops the 'we'."
+    },
+    "sources": ["TeddyRookBook curriculum, Languages"],
+    "prereqs": ["lang.ls.four"]
+  },
+  "cs.p.repeat": {
+    "key": "One pass of bubble sort is one tiny decision repeated n−1 times — the loop is the algorithm.",
+    "why": "Compare, maybe swap, step, repeat: nothing else happens. Every 'clever' algorithm in computing is this shape with a smarter policy for what to repeat.",
+    "mistake": "Watching the animation as motion rather than as repetition. Counting the comparisons turns a moving picture into a program.",
+    "worked": {
+      "q": "One full pass over eight items compares how many pairs? And two passes?",
+      "steps": [
+        "Eight items have seven adjacent pairs.",
+        "Pass one: 7. Pass two: 6 (the last item is already final).",
+        "Repetition with a shrinking boundary."
+      ],
+      "a": "7, then 6 — the pass shrinks as the tail locks."
+    },
+    "sources": ["TeddyRookBook curriculum, Robotics"],
+    "prereqs": ["cs.p.sequence"]
+  },
+  "cs.uni.invariant": {
+    "key": "After pass k, the last k items are final and never move again — the loop invariant that makes bubble sort provable.",
+    "why": "An invariant is the claim that stays true while a loop runs. It is what lets you reason about the whole run from one repeated fact, instead of replaying every step.",
+    "mistake": "Confusing the invariant with the goal. 'The tail is sorted' holds midway through; 'the array is sorted' holds only at the end.",
+    "worked": {
+      "q": "After two full passes on a 12-item array, how many items are guaranteed in final position?",
+      "steps": [
+        "Pass one locks the largest item at the end.",
+        "Pass two locks the second largest.",
+        "After pass k, k items are final."
+      ],
+      "a": "2 items — and 66 total comparisons remain to finish."
+    },
+    "sources": ["TeddyRookBook curriculum, Robotics", "CLRS-style loop invariants"],
+    "prereqs": ["cs.ls.loop"]
+  },
+  "cs.uni.split": {
+    "key": "Binary search's cost is log₂ n: each question halves what is left, so doubling the list adds one question.",
+    "why": "64 → 32 → 16 → 8 → 4 → 2 → 1 is six halvings. The count grows with the logarithm because halving is multiplication's inverse: you need one more question per doubling.",
+    "mistake": "Assuming twice the data needs twice the questions. Halving strategies grow logarithmically — the whole reason indexing works.",
+    "worked": {
+      "q": "How many binary questions for 1,000,000 sorted items?",
+      "steps": [
+        "2^19 ≈ 524,288; 2^20 ≈ 1,048,576.",
+        "So 20 halvings cover a million.",
+        "Twenty questions — not a million."
+      ],
+      "a": "At most 20."
+    },
+    "sources": ["TeddyRookBook curriculum, Robotics"],
+    "prereqs": ["cs.search.binary"]
+  },
+  "earth.p.coastline": {
+    "key": "The coastline barely moves across centuries; the borders painted over it are dated claims.",
+    "why": "Physical layers (coasts, terrain) and political layers (borders, names, memberships) live on the same map at different speeds. The timeline rewinds the political stack, not the geology.",
+    "mistake": "Reading a historical map's outline as the border of the time. The outline is the land; the line is the law, and each has its own date.",
+    "worked": {
+      "q": "A dossier from 1800 shows a smaller country than the 2020 one. What almost certainly did not change?",
+      "steps": [
+        "The coastline — physical, slow.",
+        "The border — political, dated.",
+        "The name — political, dated."
+      ],
+      "a": "The coastline; the rest are claims that changed."
+    },
+    "sources": ["TeddyRookBook curriculum, Geography", "Natural Earth 110m dataset (geometry)"],
+    "prereqs": ["earth.p.place"]
+  },
+  "earth.uni.geopol": {
+    "key": "A geographic argument names a place, a date and a layer — evidence only argues when all three are honest.",
+    "why": "Every map claim is a stack of dated layers. Choosing which year and which layer to cite is the argument; mixing years is not analysis but storytelling.",
+    "mistake": "Picking the year that proves the point. A claim built on one cherry-picked date collapses the moment a second date is added.",
+    "worked": {
+      "q": "You want to argue a region's borders were contested. Which dossier pair makes the case?",
+      "steps": [
+        "Same region, two dates.",
+        "Show the border layer changing between them.",
+        "Coastline and terrain as the unchanged controls."
+      ],
+      "a": "Two dated dossiers of one region — change against constancy."
+    },
+    "sources": ["TeddyRookBook curriculum, Geography"],
+    "prereqs": ["earth.uni.atlas"]
+  },
+  "mus.p.keys": {
+    "key": "The keyboard is an alphabet of twelve pitches; playing is spelling with them.",
+    "why": "Twelve keys repeat at every octave like letters repeating on every page. Knowing the alphabet — and that every press counts — is the ground reading music stands on.",
+    "mistake": "Treating the keyboard as a toy for hunting sounds. Twelve named pitches, learned cold, is what turns hunting into speaking.",
+    "worked": {
+      "q": "How many distinct pitch names does a piano keyboard hold per octave, and what repeats at the octave?",
+      "steps": [
+        "Twelve: seven white, five black.",
+        "The pattern of names repeats every octave.",
+        "The octave is the same alphabet, one register up."
+      ],
+      "a": "Twelve names, repeating at each octave."
+    },
+    "sources": ["OpenStax Music, pitch and notation", "TeddyRookBook curriculum, Piano Basics"],
+    "prereqs": ["mus.beat"]
+  },
+  "mus.uni.octave": {
+    "key": "The octave is the ratio 2:1, and the cents scale calls it 1200 — the ruler every other interval is measured against.",
+    "why": "Cents are a logarithmic ruler: 1200 per factor of two. Because the octave is the one interval the ear hears as 'the same note, higher', it becomes the unit of interval measurement.",
+    "mistake": "Thinking an octave is twelve 'equal things' added together. Ratios multiply; the twelve equal steps are equal in logs, not in hertz.",
+    "worked": {
+      "q": "A note at 330 Hz sits how many cents below 660 Hz?",
+      "steps": [
+        "330/660 = 0.5 — exactly one octave down.",
+        "Cents = 1200·log₂(0.5) = −1200.",
+        "One octave, by definition."
+      ],
+      "a": "1200 cents below — a full octave."
+    },
+    "sources": ["OpenStax Music, tuning systems", "TeddyRookBook curriculum, Piano Basics"],
+    "prereqs": ["mus.tuning.beats"]
+  },
+  "astro.ls.scale": {
+    "key": "Every diagram is a deal: something is traded for legibility, and an orrery trades true distance.",
+    "why": "At true scale the inner planets are grains beside a giant emptiness — honest but useless on a screen. Compressed scale keeps all planets visible at the cost of proportion.",
+    "mistake": "Reading any planet diagram as to-scale. Almost none are; the sizes and gaps are arranged for visibility, not truth.",
+    "worked": {
+      "q": "The Sun is about 109 Earth-diameters wide and 11,700 Earth-diameters from Earth. What does a page-sized orrery have to give up?",
+      "steps": [
+        "Both facts cannot fit one picture at one scale.",
+        "Choose size truth → Earth is a dot too far away to draw.",
+        "Choose distance truth → the Sun is too big to draw."
+      ],
+      "a": "One of the two — which is why the deal must be stated."
+    },
+    "sources": ["OpenStax Astronomy 2e"],
+    "prereqs": ["astro.ls.solar"]
+  },
+  "astro.uni.clock": {
+    "key": "Orbital periods are an exchange rate: 165 Earth years per Neptune lap, and any window converts by it.",
+    "why": "Kepler's third law sets each planet's period; once known, the periods convert between planetary calendars exactly. Reading one clock is reading them all.",
+    "mistake": "Treating 'a Neptune year' as vague poetry. It is a defined unit: 164.8 Earth years, measurable and convertible.",
+    "worked": {
+      "q": "How many Neptune orbits fit in 495 Earth years?",
+      "steps": [
+        "One Neptune orbit ≈ 165 Earth years.",
+        "495 / 165 = 3.",
+        "Exactly three laps."
+      ],
+      "a": "3 Neptune orbits."
+    },
+    "sources": ["OpenStax Astronomy 2e", "TeddyRookBook curriculum, Astronomy"],
+    "prereqs": ["astro.uni.kepler"]
+  },
+  "bio.p.trait": {
+    "key": "A trait is a number and the population is a cloud of its versions — selection moves the cloud, mutation refills it.",
+    "why": "No two individuals sit at the same value. When the optimum moves, each dot responds through its own version of the trait, and the cloud re-centres dot by dot.",
+    "mistake": "Thinking of a species' trait as one value. The mean is a summary of the cloud, not the cloud itself.",
+    "worked": {
+      "q": "The optimum shifts right. What happens to the cloud over many generations?",
+      "steps": [
+        "Dots nearer the new optimum leave more offspring.",
+        "The cloud's centre drifts right.",
+        "Mutation keeps the cloud wide enough to keep adapting."
+      ],
+      "a": "It re-centres on the new optimum, still spread."
+    },
+    "sources": ["OpenStax Biology 2e, population genetics"],
+    "prereqs": ["bio.p.living"]
+  },
+  "bio.uni.testcross": {
+    "key": "State the fractions before you look: one A-parent and one a-parent give three boxes carrying A and two mixed.",
+    "why": "The grid reads 11, 10, 01, 00: three boxes hold at least one dominant allele and two are mixed. Prediction-first turns the square from a picture into a test.",
+    "mistake": "Reading the square as four independent coin flips. The parent's contribution is fixed; only the pairing grid varies — that is why the fractions are exact.",
+    "worked": {
+      "q": "One parent passes A, the other a. What is the heterozygous fraction, and what does the textbook Aa × aa cross give as a phenotype split?",
+      "steps": [
+        "Grid: 11, 10, 01, 00 — two mixed boxes of four.",
+        "Heterozygous fraction 0.5.",
+        "The textbook Aa × aa cross gives a 50/50 phenotype split, the same half."
+      ],
+      "a": "0.5 — half mixed, in the grid and in the textbook."
+    },
+    "sources": ["OpenStax Biology 2e, Mendelian genetics"],
+    "prereqs": ["bio.us.carrier"]
+  },
+  "stats.p.n": {
+    "key": "The predicted spread of sample means is σ/√n — averaging is the cheapest accuracy there is.",
+    "why": "Averaging n independent measurements divides their scatter by √n before a single sample lands. The prediction readout shows the promise; the pile keeps it.",
+    "mistake": "Believing accuracy costs effort proportionally. Four times the data buys only half the spread — the square root is a hard currency.",
+    "worked": {
+      "q": "σ = 30. What n drives the predicted spread to 3?",
+      "steps": [
+        "30/√n = 3.",
+        "√n = 10.",
+        "n = 100 — the maximum on this dial."
+      ],
+      "a": "n = 100."
+    },
+    "sources": ["OpenStax Introductory Statistics, CLT"],
+    "prereqs": ["stats.p.chart"]
+  },
+  "stats.uni.law": {
+    "key": "The average of many draws converges; the next draw never does — the gambler's fallacy is the confusion of the two.",
+    "why": "The law of large numbers says the running mean approaches the true mean as samples accumulate. It says nothing about short-run balancing: after ten reds, the wheel's odds are unchanged.",
+    "mistake": "Believing results 'even out soon'. Averages are patient; single events have no memory.",
+    "worked": {
+      "q": "A fair coin has landed heads ten times. What is the chance the next flip is tails?",
+      "steps": [
+        "Coins have no memory.",
+        "P(tails) = 0.5, as always.",
+        "The long-run average converges; the next flip does not."
+      ],
+      "a": "0.5 — the streak owes you nothing."
+    },
+    "sources": ["OpenStax Introductory Statistics, law of large numbers"],
+    "prereqs": ["stats.pile"]
+  },
+  "cli.p.weather": {
+    "key": "Weather is the day; climate is the habit — averages are how a planet keeps its diary.",
+    "why": "A single hot afternoon proves nothing about the climate; the summer-and-winter averages, held over years, are the record that shifts. The seasonal swing shows both layers at once.",
+    "mistake": "Arguing climate from one memorable day. 'Coldest winter ever' and a warming climate are compatible; the average, not the anecdote, is the claim.",
+    "worked": {
+      "q": "One July is 2 °C hotter than any before it. Does that prove the climate shifted?",
+      "steps": [
+        "One month is weather — noise.",
+        "Check the trend across decades of July averages — a shift shows in the habit, not the day.",
+        "Only the long-run mean moving is climate."
+      ],
+      "a": "No — one month is weather; the trend is the claim."
+    },
+    "sources": ["NASA Climate Kids", "OpenStax Astronomy 2e, planetary climates"],
+    "prereqs": ["cli.p.sun"]
+  },
+  "cli.uni.attribute": {
+    "key": "Attribution is one-knob-at-a-time: restore the balance by naming the single cause, or you have named nothing.",
+    "why": "Several knobs can move the same readout. Changing one at a time is the only way to assign the change to a cause rather than to the noise of everything at once.",
+    "mistake": "Crediting the loudest knob. Attribution is an experiment, not an impression — the discipline that separates 'it warmed' from 'the Sun did it'.",
+    "worked": {
+      "q": "Solar 1.02 and ε 0.63 together warm the surface. How do you find which contributed what?",
+      "steps": [
+        "Reset both to defaults.",
+        "Move solar alone: read the shift.",
+        "Move ε alone: read the shift. The two add."
+      ],
+      "a": "Two one-knob experiments, then the sum."
+    },
+    "sources": ["OpenStax Astronomy 2e, planetary climates"],
+    "prereqs": ["cli.uni.forcing"]
+  },
+  "chem.p.walk": {
+    "key": "The proton count names the element: one proton is the difference between the gas in you and the gas in a balloon.",
+    "why": "Hydrogen has one proton, helium two — different elements entirely, not variants. Walking the atomic number is walking the periodic table's index; every step is a new name.",
+    "mistake": "Confusing the neutron count with the element. Isotopes are the same element; Z + 1 is a different one.",
+    "worked": {
+      "q": "Element 1 is hydrogen. What is element 2, and by what exactly do they differ?",
+      "steps": [
+        "Element 2 is helium.",
+        "One proton more — Z = 2 vs Z = 1.",
+        "Different elements, different chemistry."
+      ],
+      "a": "Helium; one proton."
+    },
+    "sources": ["OpenStax Chemistry 2e, ch. 1"],
+    "prereqs": ["chem.p.material"]
+  },
+  "chem.uni.predict": {
+    "key": "N = A − Z: isotope names are subtraction dressed as notation.",
+    "why": "The name says the mass number A; the element fixes Z. Everything else follows by one subtraction — which is why a named isotope fully determines its nuclear inventory.",
+    "mistake": "Treating isotope notation as memorised trivia. Carbon-14's neutron count is not a fact to recall; it is 14 − 6, computed.",
+    "worked": {
+      "q": "Carbon-14 has 6 protons. How many neutrons, and why is it still carbon?",
+      "steps": [
+        "N = A − Z = 14 − 6 = 8.",
+        "Still carbon because Z = 6 fixes the element.",
+        "The two extra neutrons (vs carbon-12) are what make it radioactive."
+      ],
+      "a": "8 neutrons; carbon because the protons say so."
+    },
+    "sources": ["OpenStax Chemistry 2e, nuclei and isotopes"],
+    "prereqs": ["chem.us.count"]
+  },
+  "art.ls.value": {
+    "key": "Light, middle, dark: the middle value's job is turning surfaces toward or away from the light.",
+    "why": "Extremes frame the drawing; the intermediate step is what makes a flat shape read as a form catching light. Value is the grammar of seeing structure.",
+    "mistake": "Thinking values are shades of grey to fill in. Each step is a statement about a surface's angle to the light source.",
+    "worked": {
+      "q": "A sphere shows values 90, 50 and 10. What does the 50 region describe?",
+      "steps": [
+        "90: facing the light.",
+        "10: turned away.",
+        "50: the surface angled part-way — the turn."
+      ],
+      "a": "The turning surface — form, not fill."
+    },
+    "sources": ["TeddyRookBook curriculum, Drawing Basics"],
+    "prereqs": ["art.three"]
+  },
+  "art.us.contrast": {
+    "key": "The eye enters where the widest value gap sits — contrast is a steering wheel, so place it on purpose.",
+    "why": "Vision is drawn to the sharpest difference available. The artist who knows this puts the gap where the story starts, instead of leaving it to accident.",
+    "mistake": "Spreading contrast evenly so 'everything is interesting'. Even contrast gives the eye no door, and the drawing reads as texture.",
+    "worked": {
+      "q": "Your drawing's values run 20–80 everywhere except one spot at 5 against 95. Where does the viewer look first?",
+      "steps": [
+        "The widest local gap is 5 vs 95.",
+        "The eye lands there before anywhere else.",
+        "If that is not the subject, the drawing misspeaks."
+      ],
+      "a": "At the 5-vs-95 spot — by construction."
+    },
+    "sources": ["TeddyRookBook curriculum, Colour and Design"],
+    "prereqs": ["art.five"]
+  },
+  "art.uni.critique": {
+    "key": "Critique is structural checking — values, gaps, coverage — the same three questions every time.",
+    "why": "A study can be read like a page: how many values, where the widest gap sits, how much canvas is committed. Taste is optional in that reading; structure is not.",
+    "mistake": "Treating critique as 'I like it or I don't'. Liking is data, not analysis; the structural questions come first and the verdict follows them.",
+    "worked": {
+      "q": "A study has four distinct values, its widest gap in a corner, and 40% coverage. Name its strength and its likely problem.",
+      "steps": [
+        "Four distinct values: the value structure exists.",
+        "The gap sits in a corner: the eye enters off-subject.",
+        "40% coverage: a third of the canvas is still undecided."
+      ],
+      "a": "Good values; the gap is misplaced and the block-in is unfinished."
+    },
+    "sources": ["TeddyRookBook curriculum, Drawing Basics"],
+    "prereqs": ["art.us.contrast"]
+  },
+  "eng.uni.solve": {
+    "key": "Forces come from geometry and load alone; member areas only divide them into stresses.",
+    "why": "The method of joints solves eighteen equations once: equilibrium fixes every member force. Widening a member changes no force at all — it lowers stress by giving the same force more area to live in.",
+    "mistake": "Believing thicker members 'attract' more load. The load path is fixed by the shape; sizing changes the margin, not the route.",
+    "worked": {
+      "q": "A member carries 20 kN. Its stress at 200 mm² vs 900 mm²?",
+      "steps": [
+        "Stress = force / area = 20000/200 = 100 MPa.",
+        "At 900 mm²: 20000/900 ≈ 22 MPa.",
+        "Same force both times — the force never knew."
+      ],
+      "a": "100 MPa vs 22 MPa; force unchanged."
+    },
+    "sources": ["OpenStax University Physics, statics"],
+    "prereqs": ["eng.us.truss"]
+  },
+  "mat.uni.remainder": {
+    "key": "22 = 4 × 5 + 2: the remainder is the honest residue of division, and the seed of fractions.",
+    "why": "When the divisor does not divide the whole, groups differ by one — max − min = ceil of the remainder's spread. Writing the left-over as 2/5 of a group is where fractions and decimals come from.",
+    "mistake": "Reading a nonzero spread as a mistake to fix. With 22 into 5, unevenness is not optional — it is arithmetic.",
+    "worked": {
+      "q": "22 dots into 5 groups, all placed. What are the group sizes and the spread?",
+      "steps": [
+        "Four per group uses 20; two dots remain.",
+        "Two groups take one extra: sizes 5,5,4,4,4.",
+        "Spread = 5 − 4 = 1 — exactly the remainder's footprint."
+      ],
+      "a": "5,5,4,4,4; spread 1; and 22/5 = 4.4."
+    },
+    "sources": ["TeddyRookBook curriculum, Math — fractions sequence"],
+    "prereqs": ["mat.ls.ratio"]
+  },
+
 };
 
 /* Filled with the six-lesson adult fast path for each world. */

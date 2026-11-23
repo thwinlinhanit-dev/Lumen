@@ -404,3 +404,81 @@ export function fmt(v, digits = 1) {
   if (abs !== 0 && (abs < 0.01 || abs >= 100000)) return v.toExponential(1).replace('e+', 'e');
   return v.toFixed(digits).replace(/\.0+$/, '');
 }
+
+/* ---- pan and zoom (PhET "Pan and Zoom") ---------------------------------
+   Attach to a zoom wrapper around a world's stage content. Wheel zooms at
+   the pointer; two fingers pinch-zoom and pan. A single-pointer press
+   settles the view back to 1:1 so worlds that map pointer coordinates to
+   canvas pixels (drawing, selecting) always see true geometry. ---------- */
+
+export function attachPanZoom(host, opts = {}) {
+  const maxScale = opts.maxScale || 4;
+  let scale = 1;
+  let tx = 0, ty = 0;
+
+  const apply = () => {
+    host.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+    host.style.transformOrigin = '0 0';
+    if (opts.onState) opts.onState(scale);
+  };
+
+  const zoomAt = (cx, cy, factor) => {
+    const rect = host.getBoundingClientRect();
+    const px = cx - rect.left, py = cy - rect.top;
+    const next = clamp(scale * factor, 1, maxScale);
+    const k = next / scale;
+    tx = px - k * (px - tx);
+    ty = py - k * (py - ty);
+    scale = next;
+    if (scale === 1) { tx = 0; ty = 0; }
+    apply();
+  };
+
+  const reset = () => { scale = 1; tx = 0; ty = 0; apply(); };
+
+  host.addEventListener('wheel', (e) => {
+    if (!e.ctrlKey && Math.abs(e.deltaY) < 2) return;
+    e.preventDefault();
+    zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1.12 : 1 / 1.12);
+  }, { passive: false });
+
+  const pts = new Map();
+  let pinch = null;
+  let settleTimer = 0;
+
+  host.addEventListener('pointerdown', (e) => {
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pts.size === 1 && scale > 1) {
+      /* settle unless a second finger lands quickly (that is a pinch) */
+      clearTimeout(settleTimer);
+      settleTimer = setTimeout(() => { if (pts.size === 1) reset(); }, 160);
+    }
+    if (pts.size === 2) {
+      clearTimeout(settleTimer);
+      const [a, b] = Array.from(pts.values());
+      pinch = { dist: Math.hypot(a.x - b.x, a.y - b.y), cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2, scale };
+    }
+  });
+  host.addEventListener('pointermove', (e) => {
+    if (!pts.has(e.pointerId)) return;
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pts.size === 2 && pinch) {
+      e.preventDefault();
+      const [a, b] = Array.from(pts.values());
+      const d = Math.hypot(a.x - b.x, a.y - b.y);
+      const cx = (a.x + b.x) / 2, cy = (a.y + b.y) / 2;
+      zoomAt(cx, cy, d / Math.max(1, pinch.dist));
+      tx += cx - pinch.cx; ty += cy - pinch.cy;
+      pinch = { dist: d, cx, cy, scale };
+      apply();
+    }
+  });
+  const lift = (e) => {
+    pts.delete(e.pointerId);
+    if (pts.size < 2) pinch = null;
+  };
+  host.addEventListener('pointerup', lift);
+  host.addEventListener('pointercancel', lift);
+
+  return { reset, get scale() { return scale; } };
+}

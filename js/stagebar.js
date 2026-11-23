@@ -6,6 +6,8 @@ import { h } from './ui.js';
 import * as profile from './profile.js';
 import { openPicker, openFastPicker, openPlacement } from './lesson-run.js';
 import { lessonsFor, FAST_PATH } from './lessons.js';
+import * as sound from './sound.js';
+import { STRINGS } from './strings.js';
 
 export function mountStageBar(world) {
   const worldId = world.id;
@@ -61,13 +63,25 @@ export function mountStageBar(world) {
     onclick: () => openFastPicker(world)
   }, `Adult path${fastCount ? ' · ' + fastCount : ''}`);
 
+  const soundBtn = h('button', {
+    class: 'stagebar-link',
+    type: 'button',
+    'aria-pressed': String(profile.soundEnabled()),
+    onclick: () => {
+      const on = !profile.soundEnabled();
+      profile.setSound(on);
+      sound.setEnabled(on);
+      if (on) sound.cue('correct');
+    }
+  }, profile.soundEnabled() ? STRINGS.soundOn : STRINGS.soundOff);
+
   const el = h('div', { class: 'stagebar' },
     h('div', { class: 'stagebar-row' }, seg, modeBtn),
     learn,
     fast,
     h('div', { class: 'stagebar-foot' },
       meta,
-      h('div', { class: 'stagebar-links' }, place, reset)));
+      h('div', { class: 'stagebar-links' }, place, soundBtn, reset)));
 
   function paint() {
     const stage = profile.worldStage(worldId);
@@ -79,6 +93,9 @@ export function mountStageBar(world) {
     modeBtn.textContent = profile.MODE_LABEL[mode];
     modeBtn.setAttribute('aria-label', `${profile.MODE_LABEL[mode]} — Learning mode`);
     modeBtn.setAttribute('aria-pressed', String(mode === 'adult'));
+
+    soundBtn.textContent = profile.soundEnabled() ? STRINGS.soundOn : STRINGS.soundOff;
+    soundBtn.setAttribute('aria-pressed', String(profile.soundEnabled()));
 
     const session = mode === 'adult' ? '20–25' : profile.SESSION_MINUTES[stage];
     meta.textContent = `${profile.STAGE_LABEL[stage]} · ${session} min`;

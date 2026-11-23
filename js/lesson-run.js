@@ -7,6 +7,8 @@ import { h, addTicker, trapFocus } from './ui.js';
 import * as contract from './contract.js';
 import { LESSONS, lessonsFor, DIAGNOSTICS, FAST_PATH, ENRICHMENT, TROUBLE_QUIZ } from './lessons.js';
 import * as profile from './profile.js';
+import * as sound from './sound.js';
+import { STRINGS } from './strings.js';
 
 let stageEl = null;
 let run = null;
@@ -241,7 +243,7 @@ function render() {
     const earlier = lesson.beats.slice(0, i).filter((b) => b.say);
     if (earlier.length) {
       el.appendChild(h('details', { class: 'ls-earlier' },
-        h('summary', {}, `Earlier in this lesson · ${earlier.length} ${earlier.length === 1 ? 'step' : 'steps'}`),
+        h('summary', {}, STRINGS.earlierInLesson(earlier.length)),
         h('ol', { class: 'ls-earlier-list' }, ...earlier.map((b) => h('li', {}, b.say)))));
     }
   }
@@ -298,6 +300,10 @@ function render() {
           const b = ev.currentTarget;
           if (b.dataset.locked) return;
           const ok = idx === answer;
+          /* Every check answer feeds the mastery ladder (three correct, the
+             last two in a row, then the review schedule). */
+          profile.recordAnswer(run.lesson.id, ok);
+          sound.cue(ok ? 'correct' : 'wrong');
           if (ok) {
             /* Correct: lock the row and move on. */
             for (const other of opts.children) other.dataset.locked = '1';
@@ -316,16 +322,77 @@ function render() {
   } else {
     const waiting = !!beat.until;
     el.appendChild(h('div', { class: 'ls-actions' },
-      h('span', { class: 'ls-wait' }, waiting ? '● waiting for you' : ''),
+      h('span', { class: 'ls-wait' }, waiting ? STRINGS.waitingForYou : ''),
       h('button', {
         class: 'btn accent ls-next',
         type: 'button',
         onclick: () => advance()
-      }, waiting ? 'Skip' : 'Continue')));
+      }, waiting ? STRINGS.skip : STRINGS.continueLabel)));
   }
 }
 
 const STAGE_ORDER = ['p', 'ls', 'us', 'uni'];
+
+/* ---------- mastery ladder copy and mixed checkpoints ---------- */
+
+function ladderHint(info) {
+  if (info.status === 'held') {
+    return 'Held — the full review ladder is behind this one. It stays yours.';
+  }
+  if (info.status === 'met') {
+    const day = info.dueInDays === 1 ? 'tomorrow' : `in ${info.dueInDays} days`;
+    return `Learned — review ${day} (ladder rung ${info.rung} of ${info.rungs}: 1, 3, 7, 16, 35, 75, 150 days).`;
+  }
+  if (info.status === 'learning') {
+    const left = 3 - info.correct;
+    return `Learning — ${info.correct} of 3 correct answers so far; ${left} more (the last two in a row) starts the review ladder.`;
+  }
+  return 'Answer this lesson’s check question three times — the last two in a row — and it joins the review ladder: 1, 3, 7, 16, 35, 75, 150 days.';
+}
+
+/* A checkpoint mixes topics: every CHECKPOINT_INTERVAL finished lessons in a
+   world, two check questions from *other* lessons of the same world. */
+function addCheckpoint(el, lesson) {
+  if (!profile.recordLessonDone(lesson.world)) return;
+  const pool = lessonsFor(lesson.world)
+    .filter((l) => l.id !== lesson.id && l.beats.some((b) => b.ask));
+  if (pool.length < 2) return;
+
+  const picked = [pool[0], pool[Math.min(pool.length - 1, Math.floor(pool.length / 2))]]
+    .filter((l, i, arr) => arr.indexOf(l) === i);
+
+  const card = h('div', { class: 'ls-check' });
+  card.appendChild(h('div', { class: 'ls-check-title' }, STRINGS.checkpointTitle));
+  card.appendChild(h('p', { class: 'ls-check-copy' }, STRINGS.checkpointCopy));
+
+  picked.forEach((l) => {
+    const beat = l.beats.find((b) => b.ask);
+    const row = h('div', { class: 'ls-check-q' });
+    row.appendChild(h('div', { class: 'ls-q' }, beat.ask));
+    const opts = h('div', { class: 'ls-options' });
+    (beat.options || []).forEach((opt, idx) => {
+      opts.appendChild(h('button', {
+        class: 'ls-opt', type: 'button',
+        onclick: (ev) => {
+          const b = ev.currentTarget;
+          if (b.dataset.locked) return;
+          const ok = idx === beat.answer;
+          profile.recordAnswer(l.id, ok);
+          if (ok) {
+            for (const other of opts.children) other.dataset.locked = '1';
+            b.classList.add('ok');
+          } else {
+            b.dataset.locked = '1';
+            b.classList.add('no');
+          }
+        }
+      }, opt));
+    });
+    row.appendChild(opts);
+    card.appendChild(row);
+  });
+  el.appendChild(card);
+}
 
 function nextLessonFrom(lesson) {
   const list = lessonsFor(lesson.world)
@@ -394,14 +461,16 @@ function finish() {
   const el = run.el;
   const title = run.lesson.title;
   const next = nextLessonFrom(run.lesson);
+  const info = profile.reviewInfo(run.lesson.id);
   el.innerHTML = '';
 
   el.appendChild(h('div', { class: 'ls-head' },
-    h('span', { class: 'ls-kicker' }, 'Lesson complete'),
-    h('button', { class: 'ls-close', type: 'button', onclick: () => stop() }, 'Close')));
-  el.appendChild(h('div', { class: 'ls-text' }, `${title} — done.`));
-  el.appendChild(h('div', { class: 'ls-hint' },
-    'Not held yet: come back in three days and do it again, and the dot in the rail goes green.'));
+    h('span', { class: 'ls-kicker' }, STRINGS.lessonComplete),
+    h('button', { class: 'ls-close', type: 'button', onclick: () => stop() }, STRINGS.exit)));
+  el.appendChild(h('div', { class: 'ls-text' }, STRINGS.lessonDone(title)));
+  el.appendChild(h('div', { class: 'ls-hint' }, ladderHint(info)));
+  sound.cue('done');
+  addCheckpoint(el, run.lesson);
   addEnrichment(el, run.lesson);
 
   if (next) {

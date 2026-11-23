@@ -9,6 +9,9 @@ import * as contract from './contract.js';
 import * as lesson from './lesson-run.js';
 import { mountStageBar } from './stagebar.js';
 import { LESSONS } from './lessons.js';
+import { attachPanZoom } from './ui.js';
+import * as sound from './sound.js';
+import { STRINGS } from './strings.js';
 /* One manifest entry per world. The metadata lives here so the rail can
    build before any world module loads; load() pulls the module on demand,
    so a syntax error in one world can no longer blank the whole app. */
@@ -385,9 +388,47 @@ function applyStage(id) {
 function paintDot(id) {
   const btn = railItems.get(id);
   if (!btn) return;
-  const st = profile.statusOf(id);
+  const ids = LESSONS.filter((l) => l.world === id).map((l) => l.id);
+  const st = profile.worldDotStatus(id, ids);
   btn.classList.toggle('done', st === 'held');
   btn.classList.toggle('met', st === 'met');
+  btn.classList.toggle('learning', st === 'learning');
+}
+
+/* ---- pan and zoom wiring (earth manages its own globe) ----------------- */
+
+let zoomCtl = null;
+const zoomResetBtn = ui.h('button', {
+  class: 'stage-zoom-reset', type: 'button', 'aria-label': 'Reset zoom',
+  onclick: () => { if (zoomCtl) zoomCtl.reset(); }
+}, '1:1');
+zoomResetBtn.style.display = 'none';
+document.getElementById('stage').appendChild(zoomResetBtn);
+
+function attachStageZoom(worldId) {
+  if (zoomCtl) { zoomCtl = null; }
+  const stage = document.getElementById('stage');
+  /* drop any previous wrapper */
+  const old = stage.querySelector('.stage-zoom');
+  if (old) {
+    while (old.firstChild) stage.insertBefore(old.firstChild, old);
+    old.remove();
+  }
+  if (zoomResetBtn.isConnected) zoomResetBtn.remove();
+  zoomResetBtn.style.display = 'none';
+  if (worldId === 'earth') return;
+
+  const wrap = ui.h('div', { class: 'stage-zoom' });
+  while (stage.firstChild) {
+    wrap.appendChild(stage.firstChild);
+  }
+  stage.appendChild(wrap);
+  const fade = stage.querySelector('.stage-zoom .stage-fade');
+  if (fade) stage.appendChild(fade);
+  stage.appendChild(zoomResetBtn);
+  zoomCtl = attachPanZoom(wrap, {
+    onState: (s) => { zoomResetBtn.style.display = s > 1.02 ? '' : 'none'; }
+  });
 }
 
 async function mount(id) {
@@ -441,7 +482,8 @@ async function mount(id) {
         paintDot(id);
         /* Don't talk over a message the world just raised. */
         if (firstEver && !toastEl.classList.contains('show')) {
-          toast(`${entry.name} goal met — come back in three days to hold it.`);
+          toast(STRINGS.toastGoalMet(entry.name));
+          sound.cue('goal');
         }
       } else if (!done && lastDone) {
         lastDone = false;
@@ -471,6 +513,11 @@ async function mount(id) {
     return false;
   }
   contract.end();
+
+  /* Pan and zoom (PhET baseline): wrap the mounted stage content so pinch
+     and wheel can scale it on a phone. Earth steers its own globe, so it
+     opts out. */
+  attachStageZoom(entry.id);
 
   /* Remember the state each world opens in, so "Reset controls" in the
      stuck helper can bring the instrument back to its own defaults. */
@@ -576,20 +623,20 @@ function maybeShowTip() {
   try { seen = localStorage.getItem(TIP_KEY) === '1'; } catch (e) { seen = true; }
   if (seen) return;
 
-  const tip = ui.h('div', { class: 'first-run', role: 'note', 'aria-label': 'How Lumen works' },
+  const tip = ui.h('div', { class: 'first-run', role: 'note', 'aria-label': STRINGS.tipAria },
     ui.h('div', { class: 'fr-step' },
-      ui.h('b', {}, 'The rail'), ' is your subjects — fourteen worlds, each one an instrument you steer.'),
+      ui.h('b', {}, STRINGS.tipRail), STRINGS.tipRailBody),
     ui.h('div', { class: 'fr-step' },
-      ui.h('b', {}, 'This coach'), ' states the claim, the goal, and the controls that move it.'),
+      ui.h('b', {}, STRINGS.tipCoach), STRINGS.tipCoachBody),
     ui.h('div', { class: 'fr-step' },
-      ui.h('b', {}, 'The dots'), ' — amber means the goal was met once; green means held, met again after three days.'),
+      ui.h('b', {}, STRINGS.tipDots), STRINGS.tipDotsBody),
     ui.h('button', {
       class: 'fr-dismiss', type: 'button',
       onclick: () => {
         tip.remove();
         try { localStorage.setItem(TIP_KEY, '1'); } catch (e) { /* private mode */ }
       }
-    }, 'Got it'));
+    }, STRINGS.tipDismiss));
 
   coachEl.appendChild(tip);
 }
@@ -800,15 +847,19 @@ window.addEventListener('keydown', (e) => {
   const tag = document.activeElement && document.activeElement.tagName;
   if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
 
-  /* Arrow keys drive the world's primary parameter while the stage has focus. */
-  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+  /* Arrow keys drive the world's primary parameter while the stage has focus.
+     Up/Down work as alternates; a focused slider drives itself natively. */
+  const isArrow = e.key === 'ArrowLeft' || e.key === 'ArrowRight' ||
+    e.key === 'ArrowUp' || e.key === 'ArrowDown';
+  if (isArrow) {
     if (document.activeElement !== stageEl) return;
     const p = contract.paramList()[0];
     if (!p) return;
     const v = Number(p.get());
     if (!Number.isFinite(v)) return;
     const step = Number(p.step) || 1;
-    const next = ui.clamp(v + (e.key === 'ArrowRight' ? step : -step), Number(p.min), Number(p.max));
+    const dir = (e.key === 'ArrowRight' || e.key === 'ArrowUp') ? 1 : -1;
+    const next = ui.clamp(v + dir * step, Number(p.min), Number(p.max));
     p.set(next);
     e.preventDefault();
     speakObservables();
@@ -821,9 +872,11 @@ window.addEventListener('keydown', (e) => {
 
 buildRail();
 for (const id of railItems.keys()) paintDot(id);
+sound.setEnabled(profile.soundEnabled());
 
 profile.subscribe(() => {
   if (current) applyStage(current);
+  for (const wid of railItems.keys()) paintDot(wid);
 });
 
 mount(WORLDS[0].id);

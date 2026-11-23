@@ -59,8 +59,10 @@ data/countries-110m.json   Natural Earth 110m country geometry (the only runtime
 js/app.js             the shell: rail, mounting, stage bar, stuck rule, wiring
 js/ui.js              the widget kit every world is built from
 js/contract.js        the param/observable/goal registry
-js/profile.js         stage, mode, and what has been "held" (localStorage)
+js/profile.js         stage, mode, mastery ladder, checkpoints (localStorage)
 js/stagebar.js        the stage + mode control above every coach
+js/sound.js           optional audio cues (WebAudio, off by default)
+js/strings.js         shell UI copy, separable from mechanics (PhET baseline)
 js/lessons.js         authored lessons, pure data
 js/lesson-run.js      lesson runner, picker, self-placement
 js/notes.js           the design-docs reader
@@ -336,6 +338,17 @@ answer. Everything else shows Next.
 button is spent; the remaining options stay open until the learner finds the right one.
 Quizzes teach, they do not score — there is no fail state and no penalty.
 
+**Mastery ladder (TeddyRookBook rule):** every check answer feeds `profile.recordAnswer`.
+A lesson is *learned* on **three correct answers with the last two in a row**, then returns
+for review at **1, 3, 7, 16, 35, 75 and 150 days** — a correct answer past the due date
+climbs one rung; the last rung marks the lesson *held*. The schedule lives **per lesson**
+in `lumen.profile.v1` (`mastery`), never per world. The rail dot aggregates a world's
+lessons into four states: `new`, `learning` (blue), `met` (amber, learned), `held` (green).
+
+**Checkpoints:** every 5th finished lesson in a world, the finish screen adds a mixed
+checkpoint — two check questions pulled from *other* lessons of the same world. Their
+answers feed the same ladder.
+
 **Trap:** an earlier version of the runner read `beat.ask.q` and `beat.ask.options`. It no
 longer does. `ask` is a string. Do not "restore" the object shape.
 
@@ -350,14 +363,18 @@ derived from the label as described in §4.2. If you add one, add it here.
 |---|---|---|
 | `physics` | `wavelength`, `slit_separation`, `time`, `force`, `mass` | `bright_fringes`, `fringe_width`, `slit_separation`, `acceleration`, `distance`, `density`, `behaviour` |
 | `maths` | `amplitude_a`, `frequency_b`, `phase_c`, `shift_d`, `objects`, `groups` | `amplitude`, `period`, `range`, `max_slope`, `per_group`, `spread`, `placed` |
-| `chem` | `atomic_number` | `selected`, `electronegativity`, `elements_opened`, `family` |
-| `art` | `brush` | `distinct_values`, `canvas_covered`, `strokes` |
-| `music` | `tempo` | `notes_played`, `last_note`, `phrase` |
-| `earth` | `year` | `country`, `timeline`, `events_in_view`, `countries_opened` |
-| `cs` | `array_size`, `steps_per_frame` | `comparisons_bubble`, `comparisons_quick`, `best_at_32` |
+| `chem` | `atomic_number`, `neutrons` | `selected`, `electronegativity`, `elements_opened`, `family`, `mass_number`, `neutron_count`, `stability` |
+| `art` | `brush`, `mix_ratio`, `base_value` | `distinct_values`, `canvas_covered`, `strokes`, `mixed_value`, `value_gap`, `value_steps` |
+| `music` | `tempo`, `note_frequency`, `reference` | `notes_played`, `last_note`, `phrase`, `beat_rate`, `cents_off`, `pitch_match` |
+| `earth` | `year`, `first_place`, `second_place` | `country`, `timeline`, `events_in_view`, `countries_opened`, `place_a`, `place_b`, `places_opened` |
+| `cs` | `array_size`, `steps_per_frame`, `search_size`, `target_value` | `comparisons_bubble`, `comparisons_quick`, `best_at_32`, `linear_steps`, `binary_steps` |
 | `finance` | `saved_each_month`, `annual_return`, `inflation`, `annual_fee`, `budget` | `balance_at_40y`, `in_today_s_money`, `lost_to_fees`, `years_to_double`, `spent`, `left`, `items_bought` |
-| `language` | `voice_speed` | `sentences_solved`, `clean_runs`, `mistakes_here`, `words_placed` |
-| `astro` | `time` | `elapsed`, `neptune_orbits`, `earth_years`, `scale` |
+| `language` | `voice_speed`, `words_per_minute`, `passage_words` | `sentences_solved`, `clean_runs`, `mistakes_here`, `words_placed`, `reading_seconds`, `pace_band` |
+| `astro` | `time`, `phase_angle`, `moon_distance` | `elapsed`, `neptune_orbits`, `earth_years`, `scale`, `cycle_day`, `illuminated_fraction`, `waxing` |
+| `bio` | `environment_optimum`, `selection_strength`, `mutation_rate`, `allele_from_a`, `allele_from_b` | `mean_trait`, `spread`, `distance_from_optimum`, `generation`, `dominant_fraction`, `heterozygous_fraction`, `genotype_code` |
+| `stats` | `sample_size_n`, `samples_per_frame`, `hypothesised_mean`, `true_mean` | `samples_drawn`, `measured_spread`, `predicted_n`, `mean_of_means`, `difference`, `standard_errors`, `detectable` |
+| `climate` | `solar_output`, `albedo_reflectivity`, `emissivity_lower_traps_more`, `axial_tilt`, `orbital_distance` | `absorbed`, `radiated`, `surface`, `equilibrium`, `summer_mean`, `winter_mean`, `season_contrast` |
+| `eng` | `bottom_chord`, `top_chord`, `diagonals`, `member_width`, `material` | `factor_of_safety`, `peak_stress`, `material_cost`, `bottom_chord_force`, `governing_group`, `peak_utilisation`, `yield_load`, `mass_per_metre`, `strength_to_weight` |
 | `bio` | `environment_optimum`, `selection_strength`, `mutation_rate` | `generation`, `mean_trait`, `spread`, `distance_from_optimum` |
 | `stats` | `sample_size_n`, `samples_per_frame` | `samples_drawn`, `measured_spread`, `predicted_n`, `mean_of_means` |
 | `climate` | `solar_output`, `albedo_reflectivity`, `emissivity_lower_traps_more` | `surface`, `equilibrium`, `absorbed`, `radiated` |
@@ -452,11 +469,13 @@ These have all happened. Each one cost a broken build or an hour.
 
 ## 9. The work queue
 
-**Current priority: lesson expansion.** The full plan, with the topic spine for all fourteen
-worlds, the TeddyRookBook schema mapping, the PhET inclusive-feature checklist and the five
-phases, is in `docs/Lesson-Expansion-Spec.md`. Read it before authoring any lesson. Phase 1
-(coverage to ≥10 lessons per world) comes first; its acceptance criteria are in §6 of that
-document, and the key map in §6 above is what every `until` must match.
+**Current priority: lesson expansion — phases 1–5 shipped.** The plan lives in
+`docs/Deepened specs.txt`. Status: **Phase 1** done (173 lessons; every world ≥10 with ≥3
+per stage), **Phase 2** done (every registered instrument has ≥2 lessons), **Phase 3** done
+(the mastery ladder above), **Phase 4** done (44 px touch targets, pinch/wheel pan-and-zoom
+on the stage wrapper, optional sounds via the stagebar toggle, shell copy in `js/strings.js`),
+**Phase 5** done (five diagnostic lenses per world with reasoned placement). New lessons
+must still match the key map in §6 above.
 
 The items below predate that spec and remain valid, but the expansion phases supersede their
 order.
