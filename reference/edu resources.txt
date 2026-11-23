@@ -1,0 +1,55 @@
+research all these : 1.) http://scratch.mit.edu → MIT's kids' coding platform
+2.) http://code.org → Coding lessons from scratch
+3.) http://blockly.games → Coding games with blocks
+4.) http://codecombat.com → Writing code by playing games
+5.) http://makecode.microsoft.com → Microsoft's kids' coding tool
+6.) http://hourofcode.com → One-hour coding activities
+7.) http://abcya.com → Age-appropriate educational games
+8.) http://starfall.com → Reading and letter instruction
+9.) http://pbskids.org → Educational cartoons and games
+10.) http://sesamestreet.org → Sesame Street educational archive
+11.) http://trtcocuk.net.tr → TRT's children's content archive
+12.) http://bilimgenc.tubitak.gov.tr → TÜBİTAK's children's science magazine
+13.) http://kids.nationalgeographic.com → Nature and animal content
+14.) http://si.edu/kids → Smithsonian kids' resources
+15.) http://kids.britannica.com → Encyclopedia for children
+16.) http://dkfindout.com → Visual knowledge encyclopedia
+17.) http://ducksters.com → Homework and topic explanation archive
+18.) http://wonderopolis.org → Question of the day to spark curiosity
+19.) http://sciencebuddies.org → Home experiment and project guide
+20.) http://phet.colorado.edu → Physics and chemistry simulations
+21.) http://spaceplace.nasa.gov → NASA's kids' page
+22.) http://climatekids.nasa.gov → Climate and earth science
+23.) http://esa.int/kids → European Space Agency kids' section
+24.) http://exploratorium.edu → Museum experiments and activities
+25.) http://mysteryscience.com → Ready-made science lesson plans
+26.) http://generationgenius.com → Video explanations of science topics
+27.) http://nrich.maths.org → Cambridge math problems
+28.) http://mathplayground.com → Math games
+29.) http://bedtimemath.org → Daily math question
+30.) http://splashlearn.com → Exercises by grade level
+31.) http://storylineonline.net → Audiobooks of books
+32.) http://storyweaver.org.in → Multilingual children's book archive
+33.) http://childrenslibrary.org → World children's books library
+34.) http://freekidsbooks.org → Free children's books
+35.) http://oxfordowl.co.uk → Reading books by level
+36.) http://unite4literacy.com → Audio illustrated books
+37.) http://readingbear.org → Reading learning program
+38.) http://duolingo.com → Gamified language learning
+39.) http://gus-on-the-go.com → Language teaching for young ages
+40.) http://musictheory.net → Basics of music theory
+41.) chrome music lab → Discovering music through experimentation
+42.) http://sketchrx.com → Drawing exercises
+43.) http://artforkidshub.com → Step-by-step drawing lessons
+44.) http://metkids.org → Met Museum kids' section
+45.) http://tate.org.uk/kids → Tate's kids' art page
+46.) http://chesskid.com → Chess for children
+47.) http://lichess.org → Free chess and exercises
+48.) http://typingclub.com → Ten-finger typing instruction
+49.) http://legoeducation.com → Free lesson plans
+50.) http://commonsensemedia.org → Age-appropriateness content checker
+51.) https://teddyrookbook.com/homeschool/actual-reading/phonics-reading-boot-camp/
+52.) https://github.com/TeddyRookBookClub/TeddyRookBook
+53.) "C:\Users\thwin\Downloads\Hey everyone 👋Super excited to finally give you a demo of this new app I've be….mp4"
+54.) 
+55.) https://declarative-dragging.github.io/
