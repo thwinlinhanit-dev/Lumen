@@ -127,7 +127,7 @@ export function start(lesson) {
   stageEl.appendChild(badge);
   stageEl.classList.add('stage-lesson');
 
-  run = { lesson, i: -1, t: 0, el, badge, off: null, missing: [], applied: [], warn: '', finished: false };
+  run = { lesson, i: -1, t: 0, el, badge, off: null, missing: [], applied: [], warn: '', finished: false, words: null, revealed: -1 };
 
   /* A lesson may need a different instrument. One that names none returns the
      world to the instrument it opens on, so it never inherits the last lesson's. */
@@ -142,6 +142,18 @@ export function start(lesson) {
   run.off = addTicker((dt) => {
     if (!run) return;
     run.t += dt;
+    if (run.words) {
+      /* Narration highlights word by word, the way Sketchd's tutor reads aloud:
+         the current word is accented, the ones already reached stay lit. */
+      const n = Math.min(run.words.length, Math.floor(run.t / WORD_SECONDS) + 1);
+      if (n !== run.revealed) {
+        for (let k = 0; k < run.words.length; k++) {
+          run.words[k].classList.toggle('on', k < n);
+          run.words[k].classList.toggle('now', k === n - 1);
+        }
+        run.revealed = n;
+      }
+    }
     const beat = run.lesson.beats[run.i];
     if (!beat) return;
     if (beat.until && conditionMet(beat.until)) { advance(); return; }
@@ -165,6 +177,16 @@ function advance() {
   enterBeat(run.i + 1);
 }
 
+/* Step back one beat. The beat's own `set` is replayed, so the instrument
+   returns to the state that step was written for. */
+function goBack() {
+  if (!run || run.i <= 0) return;
+  enterBeat(run.i - 1);
+}
+
+/* Seconds before each narration word lights up. */
+const WORD_SECONDS = 0.32;
+
 function enterBeat(i) {
   if (!run) return;
   const beats = run.lesson.beats;
@@ -186,8 +208,25 @@ function render() {
   if (!run) return;
   const { lesson, i, el } = run;
   const beat = lesson.beats[i];
+  const total = lesson.beats.length;
 
   el.innerHTML = '';
+
+  /* Header: the lesson, where you are, and step controls. */
+  el.appendChild(h('div', { class: 'ls-head' },
+    h('span', { class: 'ls-kicker' }, lesson.title),
+    h('div', { class: 'ls-nav' },
+      h('span', { class: 'ls-step' }, `${i + 1} / ${total}`),
+      h('button', {
+        class: 'ls-arrow', type: 'button', 'aria-label': 'Previous step',
+        disabled: i === 0,
+        onclick: () => goBack()
+      }, '‹'),
+      h('button', {
+        class: 'ls-arrow', type: 'button', 'aria-label': 'Next step',
+        onclick: () => advance()
+      }, '›'),
+      h('button', { class: 'ls-close', type: 'button', onclick: () => stop() }, 'Exit'))));
 
   const dots = h('div', { class: 'ls-dots' });
   lesson.beats.forEach((_, k) => {
@@ -195,15 +234,31 @@ function render() {
       class: 'ls-dot' + (k < i ? ' done' : k === i ? ' now' : '')
     }));
   });
-
-  el.appendChild(h('div', { class: 'ls-head' },
-    h('span', { class: 'ls-kicker' }, lesson.title),
-    h('button', { class: 'ls-close', type: 'button', onclick: () => stop() }, 'Exit')));
-
   el.appendChild(dots);
 
+  /* Earlier steps, collapsed, as in the reference studio. */
+  if (i > 0) {
+    const earlier = lesson.beats.slice(0, i).filter((b) => b.say);
+    if (earlier.length) {
+      el.appendChild(h('details', { class: 'ls-earlier' },
+        h('summary', {}, `Earlier in this lesson · ${earlier.length} ${earlier.length === 1 ? 'step' : 'steps'}`),
+        h('ol', { class: 'ls-earlier-list' }, ...earlier.map((b) => h('li', {}, b.say)))));
+    }
+  }
+
+  /* Narration: one span per word, lit by the ticker as the step is read. */
   if (beat.say) {
-    el.appendChild(h('div', { class: 'ls-text' }, beat.say));
+    const words = beat.say.split(' ').map((w) => h('span', { class: 'w' }, w));
+    const body = h('div', { class: 'ls-text ls-words' });
+    words.forEach((s, k) => {
+      body.appendChild(s);
+      if (k < words.length - 1) body.appendChild(document.createTextNode(' '));
+    });
+    el.appendChild(body);
+    run.words = words;
+    run.revealed = -1;
+  } else {
+    run.words = null;
   }
 
   if (beat.hint) {
@@ -266,7 +321,7 @@ function render() {
         class: 'btn accent ls-next',
         type: 'button',
         onclick: () => advance()
-      }, waiting ? 'Skip' : 'Next')));
+      }, waiting ? 'Skip' : 'Continue')));
   }
 }
 

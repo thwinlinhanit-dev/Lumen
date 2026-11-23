@@ -6,6 +6,7 @@ import { h, trapFocus } from './ui.js';
 import { renderMarkdown } from './markdown.js';
 
 const DOCS = [
+  { id: 'expand', label: 'Expand', path: 'docs/Lesson-Expansion-Spec.md' },
   { id: 'path', label: 'Path', path: 'docs/Curriculum.md' },
   { id: 'specs', label: 'Specs', path: 'docs/World-Specs.md' },
   { id: 'v2', label: 'Roadmap', path: 'docs/Design-Brainstorm-v2.md' },

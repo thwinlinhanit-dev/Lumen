@@ -452,6 +452,15 @@ These have all happened. Each one cost a broken build or an hour.
 
 ## 9. The work queue
 
+**Current priority: lesson expansion.** The full plan, with the topic spine for all fourteen
+worlds, the TeddyRookBook schema mapping, the PhET inclusive-feature checklist and the five
+phases, is in `docs/Lesson-Expansion-Spec.md`. Read it before authoring any lesson. Phase 1
+(coverage to ≥10 lessons per world) comes first; its acceptance criteria are in §6 of that
+document, and the key map in §6 above is what every `until` must match.
+
+The items below predate that spec and remain valid, but the expansion phases supersede their
+order.
+
 Do these in order. Each has an acceptance test you can check by reasoning, since you cannot
 run anything. Do not start the next until the current one is complete across the whole app.
 

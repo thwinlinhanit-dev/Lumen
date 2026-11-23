@@ -2283,3 +2283,80 @@ input[type="range"]::-moz-range-thumb {
 /* ===== a world whose module failed to load: dimmed rail dot ===== */
 .rail-item.broken { opacity: 0.35; }
 .rail-item.broken .dot { background: var(--bad); opacity: 1; box-shadow: 0 0 8px var(--bad); }
+
+
+/* ==========================================================================
+   lesson presentation — step controls, word-by-word narration, earlier steps
+   Modelled on the Sketchd studio: the words light as they are read, and the
+   step counter and Continue are always in reach.
+   ========================================================================== */
+
+.ls-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+.ls-step {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+  margin-right: 4px;
+}
+.ls-arrow {
+  width: 24px;
+  height: 24px;
+  border-radius: 99px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1;
+  transition: border-color 0.16s ease, color 0.16s ease;
+}
+.ls-arrow:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.ls-arrow:disabled { opacity: 0.35; cursor: default; }
+
+.ls-earlier {
+  margin: 0 0 10px;
+  font-size: 11px;
+  color: var(--ink-3);
+}
+.ls-earlier summary {
+  cursor: pointer;
+  list-style: none;
+  letter-spacing: 0.04em;
+}
+.ls-earlier summary::-webkit-details-marker { display: none; }
+.ls-earlier summary::before {
+  content: '▸ ';
+  color: var(--accent);
+}
+.ls-earlier[open] summary::before { content: '▾ '; }
+.ls-earlier-list {
+  margin: 6px 0 0 16px;
+  padding: 0;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+.ls-earlier-list li { margin-bottom: 3px; }
+
+/* Word-level narration: unread words dim, the reached ones light, the current
+   word is accented. Keeps the spoken-and-read channels in step. */
+.ls-words .w {
+  color: rgba(233, 239, 247, 0.32);
+  transition: color 0.18s ease;
+}
+.ls-words .w.on { color: var(--ink-2); }
+.ls-words .w.now { color: var(--ink); }
+.ls-words .w.now {
+  background: var(--accent-soft);
+  border-radius: 3px;
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+@media (max-width: 860px) {
+  .ls-arrow { width: 22px; height: 22px; }
+  .ls-step { display: none; }
+}
