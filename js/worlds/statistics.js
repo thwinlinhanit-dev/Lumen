@@ -3,6 +3,7 @@
    ========================================================================== */
 
 import * as ui from '../ui.js';
+import * as contract from '../contract.js';
 
 const BINS = 64;
 const SIGMA = 30;     // sd of the skewed population
@@ -38,6 +39,50 @@ export default {
     const badge = ui.h('div', { class: 'hud tl' },
       ui.h('span', { class: 'badge live' }, ui.h('span', { class: 'led' }), 'Drawing samples'));
     stage.appendChild(badge);
+
+    /* Wrap the sampling surface into one switchable pane. */
+    const panePrimary = ui.h('div', { class: 'stage-pane' });
+    while (stage.firstChild) panePrimary.appendChild(stage.firstChild);
+    stage.appendChild(panePrimary);
+
+    /* ---- second instrument: is a difference detectable? ---- */
+    let instrument = 'stats';
+    let hypMean = 50;
+    let trueMean = 55;
+    let difference = 0;
+    let stdErrors = 0;
+    let detectable = 0;
+
+    const paneSecond = ui.h('div', { class: 'stage-pane secondary-pane', style: { display: 'none' } });
+    const secondHead = ui.h('div', { class: 'hud tl' },
+      ui.h('span', { class: 'badge' }, ui.h('span', { class: 'led' }), 'Hypothesis · the gap'));
+    const meansLine = ui.h('div', { class: 'sec-line' });
+    const gapLine = ui.h('div', { class: 'sec-line' });
+    const meanGrid = ui.h('div', { class: 'sec-grid' });
+    const hypCell = ui.h('div', { class: 'sec-cell' });
+    const trueCell = ui.h('div', { class: 'sec-cell' });
+    const gapCell = ui.h('div', { class: 'sec-cell' });
+    meanGrid.appendChild(hypCell);
+    meanGrid.appendChild(trueCell);
+    meanGrid.appendChild(gapCell);
+    paneSecond.appendChild(secondHead);
+    paneSecond.appendChild(meansLine);
+    paneSecond.appendChild(gapLine);
+    paneSecond.appendChild(meanGrid);
+    stage.appendChild(paneSecond);
+
+    function paintSecond() {
+      difference = Math.abs(trueMean - hypMean);
+      stdErrors = difference / 5;
+      detectable = stdErrors >= 2 ? 1 : 0;
+      meansLine.textContent = `Hypothesised mean ${hypMean} · true mean ${trueMean}.`;
+      gapLine.textContent = `Gap ${difference} — that is ${stdErrors.toFixed(2)} standard errors, ${detectable ? 'detectable' : 'not yet detectable'}.`;
+      hypCell.textContent = `H0: ${hypMean}`;
+      trueCell.textContent = `True: ${trueMean}`;
+      gapCell.textContent = `Gap: ${difference}`;
+    }
+
+    paintSecond();
 
     const fit = ui.fitCanvas(canvas);
     const ctx = fit.ctx;
@@ -216,20 +261,83 @@ export default {
     coach.appendChild(ui.note(
       'The white curve is not fitted — it is the predicted normal with mean μ and spread <b>σ/√n</b>. When it tracks the bars, the central limit theorem is doing real work in front of you.'));
 
+    /* ---- wrap the sampling coach, then add the hypothesis one ---- */
+    const coachPrimary = ui.h('div', { class: 'instrument-pane' });
+    while (coach.firstChild) coachPrimary.appendChild(coach.firstChild);
+    const coachSecond = ui.h('div', { class: 'instrument-pane', style: { display: 'none' } });
+    coach.appendChild(coachPrimary);
+    coach.appendChild(coachSecond);
+
+    const oDiff = ui.obs('Difference', '');
+    const oSE = ui.obs('Standard errors', '');
+    const oDetect = ui.obs('Detectable', '');
+    const sHyp = ui.slider({
+      label: 'Hypothesised mean', min: 0, max: 100, step: 1, value: hypMean,
+      format: (v) => String(Math.round(v)),
+      onInput: (v) => { hypMean = Math.round(v); paintSecond(); }
+    });
+    const sTrue = ui.slider({
+      label: 'True mean', min: 0, max: 100, step: 1, value: trueMean,
+      format: (v) => String(Math.round(v)),
+      onInput: (v) => { trueMean = Math.round(v); paintSecond(); }
+    });
+    const sg = ui.goal(
+      'Open a gap of at least <b>10</b> points — two standard errors on this scale.',
+      () => ({ done: detectable >= 1, progress: `${stdErrors.toFixed(2)} standard errors` }),
+      'hypothesis'
+    );
+    coachSecond.appendChild(ui.h('div', { class: 'kicker' },
+      ui.h('span', { class: 'bar' }), 'Statistics · hypothesis'));
+    coachSecond.appendChild(ui.h('h2', { class: 'lesson-title' }, 'A gap is only visible against noise'));
+    coachSecond.appendChild(ui.h('p', { class: 'lesson-body' },
+      'One mean is the claim, the other is what is actually true. Their difference is measured in fixed five-point steps here, so a gap only counts as detectable once it clears two of them.'));
+    coachSecond.appendChild(ui.section('Goal', sg.el));
+    coachSecond.appendChild(ui.section('Observables', ui.obsList(oDiff, oSE, oDetect)));
+    coachSecond.appendChild(ui.section('Means', ui.controls(sHyp.el, sTrue.el)));
+    coachSecond.appendChild(ui.h('div', { class: 'hairline' }));
+    coachSecond.appendChild(ui.note(
+      'The five-point step and the divide-by-five are a teaching scale, not a power calculation. Real detectability depends on sample size, variance and a chosen significance level, none of which this pane models.'));
+
+    function setInstrument(id) {
+      instrument = id;
+      panePrimary.style.display = id === 'stats' ? '' : 'none';
+      paneSecond.style.display = id === 'hypothesis' ? '' : 'none';
+      coachPrimary.style.display = id === 'stats' ? '' : 'none';
+      coachSecond.style.display = id === 'hypothesis' ? '' : 'none';
+      switchSeg.select(id);
+      contract.selectInstrument(id);
+      if (id === 'hypothesis') paintSecond(); else { fit.resize(); draw(); }
+      contract.useGoal(id);
+    }
+    const switchSeg = ui.segmented(
+      [{ id: 'stats', label: 'Sampling' }, { id: 'hypothesis', label: 'Hypothesis' }],
+      'stats', setInstrument);
+    coach.appendChild(switchSeg);
+    contract.registerInstrument({ id: 'stats', activate: () => setInstrument('stats') });
+    contract.registerInstrument({ id: 'hypothesis', activate: () => setInstrument('hypothesis') });
+
     const ro = new ResizeObserver(() => draw());
     ro.observe(canvas);
 
     reset();
 
     const stop = ui.addTicker(() => {
-      for (let i = 0; i < speed; i++) takeSample();
-      draw();
-      oCount.set(String(count), count > 150);
-      oSpread.set(observedSE().toFixed(2), observedSE() < 3);
-      oPred.set((SIGMA / Math.sqrt(n)).toFixed(2));
-      oMean.set(count ? (sum / count).toFixed(2) : '—');
-      g.update();
-      api.markDone(g.done);
+      if (instrument === 'stats') {
+        for (let i = 0; i < speed; i++) takeSample();
+        draw();
+        oCount.set(String(count), count > 150);
+        oSpread.set(observedSE().toFixed(2), observedSE() < 3);
+        oPred.set((SIGMA / Math.sqrt(n)).toFixed(2));
+        oMean.set(count ? (sum / count).toFixed(2) : '—');
+        g.update();
+        api.markDone(g.done);
+        return;
+      }
+      oDiff.set(String(difference));
+      oSE.set(stdErrors.toFixed(2));
+      oDetect.set(String(detectable));
+      sg.update();
+      api.markDone(sg.done);
     });
 
     return () => { stop(); ro.disconnect(); fit.destroy(); };

@@ -3,6 +3,7 @@
    ========================================================================== */
 
 import * as ui from '../ui.js';
+import * as contract from '../contract.js';
 
 const PAPER = '#14171c';
 const SWATCHES = ['#f2e9d8', '#d9a441', '#b4503c', '#8e6b4f', '#7d8f5a', '#4a6fa5', '#3b4658', '#12151a'];
@@ -81,6 +82,63 @@ export default {
     wrap.appendChild(canvasWrap);
     wrap.appendChild(panel);
     stage.appendChild(wrap);
+
+    /* Wrap the painting studio into one switchable pane. */
+    const panePrimary = ui.h('div', { class: 'stage-pane' });
+    while (stage.firstChild) panePrimary.appendChild(stage.firstChild);
+    stage.appendChild(panePrimary);
+
+    /* ---- second instrument: palette ---- */
+    let instrument = 'art';
+    let mixRatio = 20;
+    let baseValue = 20;
+
+    const paneSecond = ui.h('div', { class: 'stage-pane secondary-pane', style: { display: 'none' } });
+    const palHead = ui.h('div', { class: 'hud tl' },
+      ui.h('span', { class: 'badge' }, ui.h('span', { class: 'led' }), 'Palette · value mixing'));
+    const palLine = ui.h('div', { class: 'sec-line' });
+    const palBig = ui.h('div', { class: 'sec-line strong' });
+    const palGrid = ui.h('div', { class: 'sec-grid' });
+    const swBase = ui.h('div', { class: 'sec-cell' });
+    const swMixed = ui.h('div', { class: 'sec-cell' });
+    const swOther = ui.h('div', { class: 'sec-cell' });
+    palGrid.appendChild(swBase);
+    palGrid.appendChild(swMixed);
+    palGrid.appendChild(swOther);
+    paneSecond.appendChild(palHead);
+    paneSecond.appendChild(palLine);
+    paneSecond.appendChild(palBig);
+    paneSecond.appendChild(palGrid);
+    stage.appendChild(paneSecond);
+
+    function computePalette() {
+      const other = 100 - baseValue;
+      const mixed = ui.lerp(baseValue, other, mixRatio / 100);
+      return {
+        other,
+        mixed,
+        gap: Math.abs(mixed - baseValue),
+        steps: Math.round(mixed / 20)
+      };
+    }
+
+    function paintSecond() {
+      const { other, mixed, gap } = computePalette();
+      palLine.textContent = `Base ${baseValue} · Other ${other} · Mix ${mixRatio}%`;
+      palBig.textContent = `Mixed value ${mixed.toFixed(1)} · gap ${gap.toFixed(1)}`;
+      const shades = [
+        [swBase, baseValue, `Base ${baseValue}`],
+        [swMixed, mixed, `Mixed ${mixed.toFixed(0)}`],
+        [swOther, other, `Other ${other}`]
+      ];
+      for (const [node, level, label] of shades) {
+        node.style.background = `hsl(0, 0%, ${level.toFixed(1)}%)`;
+        node.style.color = level > 55 ? '#0b0d10' : '';
+        node.textContent = label;
+      }
+    }
+
+    paintSecond();
 
     const ctx = paint.getContext('2d');
     const gctx = guides.getContext('2d');
@@ -243,26 +301,29 @@ export default {
       last = { x, y };
     }
 
-    paint.addEventListener('pointerdown', (e) => {
+    /* Named handlers so teardown can remove them explicitly. */
+    const onDown = (e) => {
       paint.setPointerCapture(e.pointerId);
       snapshot();
       drawing = true;
       lineCount = 0;
       last = pos(e);
       stamp(last.x, last.y);
-    });
-    paint.addEventListener('pointermove', (e) => {
+    };
+    const onMove = (e) => {
       if (!drawing) return;
       const p = pos(e);
       strokeTo(p.x, p.y);
       lineCount++;
-    });
+    };
     const end = () => {
       if (!drawing) return;
       drawing = false;
       ctx.globalAlpha = 1;
       if (lineCount > 0) strokes++;
     };
+    paint.addEventListener('pointerdown', onDown);
+    paint.addEventListener('pointermove', onMove);
     paint.addEventListener('pointerup', end);
     paint.addEventListener('pointercancel', end);
     paint.addEventListener('pointerleave', end);
@@ -318,7 +379,8 @@ export default {
       () => {
         const ok = distinct >= 5 && coverage > 0.05;
         return { done: ok, progress: ok ? 'That reads from across the room.' : `${distinct} of 5 values present` };
-      }
+      },
+      'art'
     );
 
     coach.appendChild(ui.h('div', { class: 'kicker' },
@@ -334,22 +396,97 @@ export default {
     coach.appendChild(ui.note(
       'This is the part consumer art apps never do: the studio <b>looks back</b>. Value distribution, edge quality, proportion against the reference — all of it is ordinary image analysis, and all of it is teachable feedback.'));
 
+    /* ---- wrap the art coach, then add the palette one ---- */
+    const coachPrimary = ui.h('div', { class: 'instrument-pane' });
+    while (coach.firstChild) coachPrimary.appendChild(coach.firstChild);
+    const coachSecond = ui.h('div', { class: 'instrument-pane', style: { display: 'none' } });
+    coach.appendChild(coachPrimary);
+    coach.appendChild(coachSecond);
+
+    const oMixed = ui.obs('Mixed value', '');
+    const oGap = ui.obs('Value gap', '');
+    const oSteps = ui.obs('Value steps', '');
+
+    const sMix = ui.slider({
+      label: 'Mix ratio', min: 0, max: 100, step: 1, value: mixRatio,
+      format: (v) => `${Math.round(v)}%`,
+      onInput: (v) => { mixRatio = Math.round(v); paintSecond(); }
+    });
+    const sBase = ui.slider({
+      label: 'Base value', min: 0, max: 100, step: 1, value: baseValue,
+      format: (v) => String(Math.round(v)),
+      onInput: (v) => { baseValue = Math.round(v); paintSecond(); }
+    });
+
+    const sg = ui.goal(
+      'Mix a value between <b>40</b> and <b>60</b>.',
+      () => {
+        const v = computePalette().mixed;
+        return { done: v >= 40 && v <= 60, progress: `Mixed value ${v.toFixed(1)}` };
+      },
+      'palette'
+    );
+
+    coachSecond.appendChild(ui.h('div', { class: 'kicker' },
+      ui.h('span', { class: 'bar' }), 'Art · value mixing'));
+    coachSecond.appendChild(ui.h('h2', { class: 'lesson-title' }, 'A middle value is a decision, not a filter'));
+    coachSecond.appendChild(ui.h('p', { class: 'lesson-body' },
+      'Two greys sit at the base value and its opposite. The mix ratio slides between them, and the gap tells you how far you have travelled from the base. Stop in the middle band and the two ends stop arguing.'));
+    coachSecond.appendChild(ui.section('Goal', sg.el));
+    coachSecond.appendChild(ui.section('Observables', ui.obsList(oMixed, oGap, oSteps)));
+    coachSecond.appendChild(ui.section('Controls', ui.controls(sMix.el, sBase.el)));
+    coachSecond.appendChild(ui.h('div', { class: 'hairline' }));
+    coachSecond.appendChild(ui.note(
+      'The blend is a straight linear mix between a grey and its inverse, so an even mix always lands on mid grey. Real pigment mixing subtracts light and rarely stays neutral — this one is arithmetic on lightness, not a paint simulation.'));
+
+    function setInstrument(id) {
+      instrument = id;
+      panePrimary.style.display = id === 'art' ? '' : 'none';
+      paneSecond.style.display = id === 'palette' ? '' : 'none';
+      coachPrimary.style.display = id === 'art' ? '' : 'none';
+      coachSecond.style.display = id === 'palette' ? '' : 'none';
+      switchSeg.select(id);
+      contract.selectInstrument(id);
+      if (id === 'palette') paintSecond(); else resize();
+      contract.useGoal(id);
+    }
+    const switchSeg = ui.segmented(
+      [{ id: 'art', label: 'Studio' }, { id: 'palette', label: 'Palette' }],
+      'art', setInstrument);
+    coach.appendChild(switchSeg);
+    contract.registerInstrument({ id: 'art', activate: () => setInstrument('art') });
+    contract.registerInstrument({ id: 'palette', activate: () => setInstrument('palette') });
+
     const ro = new ResizeObserver(() => resize());
     ro.observe(canvasWrap);
     resize();
 
     const timer = setInterval(() => {
-      analyse();
-      oDistinct.set(String(distinct), distinct >= 5);
-      oCover.set(String(Math.round(coverage * 100)));
-      oStrokes.set(String(strokes));
-      g.update();
-      api.markDone(g.done);
+      if (instrument === 'art') {
+        analyse();
+        oDistinct.set(String(distinct), distinct >= 5);
+        oCover.set(String(Math.round(coverage * 100)));
+        oStrokes.set(String(strokes));
+        g.update();
+        api.markDone(g.done);
+        return;
+      }
+      const { mixed, gap, steps } = computePalette();
+      oMixed.set(mixed.toFixed(1));
+      oGap.set(gap.toFixed(1));
+      oSteps.set(String(steps));
+      sg.update();
+      api.markDone(sg.done);
     }, 420);
 
     return () => {
       clearInterval(timer);
       ro.disconnect();
+      paint.removeEventListener('pointerdown', onDown);
+      paint.removeEventListener('pointermove', onMove);
+      paint.removeEventListener('pointerup', end);
+      paint.removeEventListener('pointercancel', end);
+      paint.removeEventListener('pointerleave', end);
     };
   }
 };

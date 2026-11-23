@@ -18,10 +18,10 @@ So your correctness comes entirely from care: reading before editing, copying pa
 already work, re-reading after editing, and never claiming something works because it looks
 right.
 
-**A single syntax error in any file makes the entire app a blank page**, because `app.js`
-imports all fourteen worlds at module load and the browser stops on the first parse error.
-There is no partial failure and no error message the user can read. Treat every edit as
-load-bearing.
+Treat every edit as load-bearing. The shell itself (`app.js`, `ui.js`, `contract.js`,
+`lesson-run.js`) still loads statically — one syntax error there is a blank page. World
+modules load on demand (`MANIFEST` in `app.js`), so a broken world file now fails alone:
+its rail dot dims and the stage shows an error card instead of the app dying.
 
 ---
 
@@ -73,8 +73,9 @@ docs/*.md             product documents, readable in-app under Design
 
 ## 2. Invariants — break any of these and the app is broken
 
-1. **One syntax error = blank page.** Always read a file before editing it. Always re-read
-   the edited region afterwards. Never rewrite a file you have not read.
+1. **Shell syntax error = blank page.** Always read a file before editing it. Always re-read
+   the edited region afterwards. Never rewrite a file you have not read. World files fail
+   alone; the shell files (`app.js`, `ui.js`, `contract.js`, `lesson-run.js`) do not.
 2. **No dependencies, no build step, no framework.** Not a package, not a CDN script, not a
    bundler. Every file you need must be in the repo.
 3. **The contract registry is live only during `world.mount()`.** `ui.slider`, `ui.obs` and
@@ -162,6 +163,8 @@ ui.button(label, onClick, variant)  // variant: '' | 'accent' | 'ghost'
 ui.buttonRow(...buttons)
 ui.fitCanvas(canvas)            // -> {ctx, size:{w,h,dpr}, resize, destroy}
 ui.addTicker(fn)                // shared rAF; fn(dt, ts); returns unsubscribe
+ui.trapFocus(el)                // keep Tab inside a dialog; call once after appending
+ui.holdTracker(ms)              // -> {update(ok, dt), met, secondsLeft}; goals stable at rest
 ui.clamp, ui.lerp, ui.rgba, ui.hexToRgb, ui.wavelengthToColor, ui.fmt
 ```
 
@@ -186,6 +189,11 @@ coach.appendChild(ui.note('The honest caveat. <b>What the model leaves out.</b>'
 
 Keep the title as a *claim*. "Sorting is a race you can time", not "Sorting algorithms".
 Keep the body to three sentences. The note is where you are honest about the simplification.
+
+Stage gating works by role, not wording: `ui.section` stamps `data-role` from its internal
+`ROLE_OF` map (`Observables`/`Selection` → `metrics`, `Critique` → `critique`). If you coin
+a new section title that must hide at a stage, add it to `ROLE_OF` and gate on the role —
+never on the title string.
 
 ### 3.4 Drawing, per frame
 
@@ -255,8 +263,10 @@ array literals in a 60 fps loop over thousands of items, no `Math.max(...bigArra
 ### 4.3 Add an observable
 
 Identical to a parameter, with `ui.obs(label, unit)` and a `set` call each frame. The value
-you pass must start with a number. Acceptance: it reads correctly in the coach, and a goal
-built on it flips when the condition is met.
+you pass must start with a number. If an observable that used to be numeric stops parsing
+as one (a status string like `'complete'`), `ui.obs` warns once in the console — treat that
+warning as a bug and move the status elsewhere. Acceptance: it reads correctly in the coach,
+and a goal built on it flips when the condition is met.
 
 ### 4.4 Add a whole world
 
@@ -265,19 +275,21 @@ told to anyway, these are the twelve steps and skipping any one leaves it invisi
 blank:
 
 1. Create `js/worlds/<id>.js` with the shape in §3.1.
-2. `import <id> from './worlds/<id>.js';` in `js/app.js`.
-3. Add it to the `WORLDS` array in the order it should appear in the rail.
-4. Give it a unique `accent` — check the existing ones first: `#5ac8fa #a78bfa #34d399
+2. Add a manifest entry to `MANIFEST` in `js/app.js` in the rail order: `{ id, name, sub,
+   accent, glyph, load: () => import('./worlds/<id>.js') }`. Worlds load on demand, so a
+   syntax error in one world file dims its rail dot instead of blanking the app.
+3. Give it a unique `accent` — check the existing ones first: `#5ac8fa #a78bfa #34d399
    #fb7185 #fbbf24 #60a5fa #818cf8 #a3e635 #e879f9 #f97316 #4ade80 #f59e0b #2dd4bf #94a3b8`.
-5. Give it a 24×24 stroke-only `glyph` using `currentColor`.
-6. Give it a goal with `ui.goal` and call `api.markDone(g.done)` every frame.
-7. Register at least one parameter if the world can be steered at all.
-8. Set `fade: false` if the stage vignette hurts it (tables, text, UI panels).
-9. If it has bottom-anchored chrome, add a `.stage-lesson` shift rule in `css/styles.css`
+4. Give it a 24×24 stroke-only `glyph` using `currentColor` — copy it into the manifest
+   entry, which is the rail's source of truth.
+5. Give it a goal with `ui.goal` and call `api.markDone(g.done)` every frame.
+6. Register at least one parameter if the world can be steered at all.
+7. Set `fade: false` if the stage vignette hurts it (tables, text, UI panels).
+8. If it has bottom-anchored chrome, add a `.stage-lesson` shift rule in `css/styles.css`
    so the lesson strip does not cover it.
-10. Author at least two lessons in `js/lessons.js` (`world: '<id>'`).
-11. Add its key list to §6 here.
-12. Publish and check the rail shows it, the world mounts, and the stage bar appears.
+9. Author at least two lessons in `js/lessons.js` (`world: '<id>'`).
+10. Add its key list to §6 here.
+11. Publish and check the rail shows it, the world mounts, and the stage bar appears.
 
 ### 4.5 Add CSS
 
@@ -319,6 +331,10 @@ conditions fire instantly — always give a lesson a starting state one way or t
 
 Beats with `until` show a Skip button so nobody is trapped. Beats with `ask` wait for an
 answer. Everything else shows Next.
+
+**Ask policy:** a lesson never advances on a wrong answer. A wrong pick is marked and its
+button is spent; the remaining options stay open until the learner finds the right one.
+Quizzes teach, they do not score — there is no fail state and no penalty.
 
 **Trap:** an earlier version of the runner read `beat.ask.q` and `beat.ask.options`. It no
 longer does. `ask` is a string. Do not "restore" the object shape.

@@ -3,6 +3,7 @@
    ========================================================================== */
 
 import * as ui from '../ui.js';
+import * as contract from '../contract.js';
 
 /* ---- algorithms as steppers ------------------------------------------- */
 
@@ -122,6 +123,60 @@ export default {
     const badge = ui.h('div', { class: 'hud tl' },
       ui.h('span', { class: 'badge' }, ui.h('span', { class: 'led' }), 'Two algorithms, one array'));
     stage.appendChild(badge);
+
+    /* Wrap the sorting surface into one switchable pane. */
+    const paneSort = ui.h('div', { class: 'stage-pane' });
+    while (stage.firstChild) paneSort.appendChild(stage.firstChild);
+    stage.appendChild(paneSort);
+
+    /* ---- second instrument: linear vs binary search ---- */
+    let instrument = 'sort';
+    let searchSize = 16;
+    let target = 12;
+    const sorted = [];
+    let linearSteps = 0;
+    let binarySteps = 0;
+
+    const paneSearch = ui.h('div', { class: 'stage-pane search-pane', style: { display: 'none' } });
+    const searchHead = ui.h('div', { class: 'hud tl' },
+      ui.h('span', { class: 'badge' }, ui.h('span', { class: 'led' }), 'Search · two strategies'));
+    const oLinText = ui.h('div', { class: 'search-line' });
+    const oBinText = ui.h('div', { class: 'search-line' });
+    const chipRow = ui.h('div', { class: 'search-list' });
+    paneSearch.appendChild(searchHead);
+    paneSearch.appendChild(oLinText);
+    paneSearch.appendChild(oBinText);
+    paneSearch.appendChild(chipRow);
+    stage.appendChild(paneSearch);
+
+    function rebuildSearch() {
+      sorted.length = 0;
+      for (let i = 1; i <= searchSize; i++) sorted.push(i * 2);
+      target = ui.clamp(Math.round(target), 2, searchSize * 2);
+    }
+
+    function paintSearch() {
+      const idx = sorted.indexOf(target);
+      linearSteps = idx < 0 ? searchSize : idx + 1;
+      binarySteps = 0;
+      let lo = 0, hi = sorted.length - 1;
+      while (lo <= hi) {
+        binarySteps++;
+        const mid = (lo + hi) >> 1;
+        if (sorted[mid] === target) break;
+        if (sorted[mid] < target) lo = mid + 1; else hi = mid - 1;
+      }
+      oLinText.textContent = `Linear scan: ${linearSteps} comparisons from the start.`;
+      oBinText.textContent = `Binary search: ${binarySteps} comparisons after halving each time.`;
+      chipRow.innerHTML = '';
+      for (const v of sorted) {
+        chipRow.appendChild(ui.h('span', {
+          class: 'search-chip' + (v === target ? ' hit' : '')
+        }, String(v)));
+      }
+    }
+
+    rebuildSearch();
 
     const fit = ui.fitCanvas(canvas);
     const ctx = fit.ctx;
@@ -359,6 +414,60 @@ export default {
     coach.appendChild(ui.note(
       'The dashed curve is <b>n log n</b>. The dots are comparisons the two algorithms actually counted — the curve is a measurement here, not a definition.'));
 
+    /* ---- wrap the sorting coach, then add the searching one ---- */
+    const coachSort = ui.h('div', { class: 'instrument-pane' });
+    while (coach.firstChild) coachSort.appendChild(coach.firstChild);
+    const coachSearch = ui.h('div', { class: 'instrument-pane', style: { display: 'none' } });
+    coach.appendChild(coachSort);
+    coach.appendChild(coachSearch);
+
+    const oLinear = ui.obs('Linear steps', '');
+    const oBinary = ui.obs('Binary steps', '');
+    const sSearchSize = ui.slider({
+      label: 'Search size', min: 8, max: 64, step: 1, value: searchSize,
+      format: (v) => String(Math.round(v)),
+      onInput: (v) => { searchSize = Math.round(v); rebuildSearch(); paintSearch(); }
+    });
+    const sTarget = ui.slider({
+      label: 'Target value', min: 2, max: 128, step: 2, value: target,
+      format: (v) => String(Math.round(v)),
+      onInput: (v) => { target = Math.round(v); paintSearch(); }
+    });
+    const sg = ui.goal(
+      'Find the target in at most <b>7</b> binary comparisons.',
+      () => ({ done: binarySteps <= 7, progress: `${binarySteps} binary comparisons` }),
+      'search'
+    );
+    coachSearch.appendChild(ui.h('div', { class: 'kicker' },
+      ui.h('span', { class: 'bar' }), 'Computer science · searching'));
+    coachSearch.appendChild(ui.h('h2', { class: 'lesson-title' }, 'Halving beats scanning'));
+    coachSearch.appendChild(ui.h('p', { class: 'lesson-body' },
+      'The array is sorted. One method walks from the start; the other discards half the remaining list on every comparison.'));
+    coachSearch.appendChild(ui.section('Goal', sg.el));
+    coachSearch.appendChild(ui.section('Observables', ui.obsList(oLinear, oBinary)));
+    coachSearch.appendChild(ui.section('Controls', ui.controls(sSearchSize.el, sTarget.el)));
+    coachSearch.appendChild(ui.h('div', { class: 'hairline' }));
+    coachSearch.appendChild(ui.note(
+      'The list is sorted and the target is always present, so both comparison counts are exact — not samples.'));
+
+    function setInstrument(id) {
+      instrument = id;
+      paneSort.style.display = id === 'sort' ? '' : 'none';
+      paneSearch.style.display = id === 'search' ? '' : 'none';
+      coachSort.style.display = id === 'sort' ? '' : 'none';
+      coachSearch.style.display = id === 'search' ? '' : 'none';
+      switchSeg.select(id);
+      contract.selectInstrument(id);
+      if (id === 'search') paintSearch(); else { fit.resize(); draw(); }
+      contract.useGoal(id);
+    }
+    const switchSeg = ui.segmented(
+      [{ id: 'sort', label: 'Sorting' }, { id: 'search', label: 'Searching' }],
+      'sort', setInstrument);
+    coach.appendChild(switchSeg);
+    contract.registerInstrument({ id: 'sort', activate: () => setInstrument('sort') });
+    contract.registerInstrument({ id: 'search', activate: () => setInstrument('search') });
+
     /* ---------- loop ---------- */
     const ro = new ResizeObserver(() => draw());
     ro.observe(canvas);
@@ -366,19 +475,26 @@ export default {
     reset();
 
     const stop = ui.addTicker(() => {
-      if (running) {
-        advance(lanes[0]);
-        advance(lanes[1]);
-        if (lanes[0].done && lanes[1].done) finished();
-      }
-      draw();
-      if (chartDirty) { drawChart(); chartDirty = false; }
+      if (instrument === 'sort') {
+        if (running) {
+          advance(lanes[0]);
+          advance(lanes[1]);
+          if (lanes[0].done && lanes[1].done) finished();
+        }
+        draw();
+        if (chartDirty) { drawChart(); chartDirty = false; }
 
-      oA.set(String(lanes[0].comps));
-      oB.set(String(lanes[1].comps));
-      oBest.set(bestComps === Infinity ? '—' : String(bestComps));
-      g.update();
-      api.markDone(g.done);
+        oA.set(String(lanes[0].comps));
+        oB.set(String(lanes[1].comps));
+        oBest.set(bestComps === Infinity ? '—' : String(bestComps));
+        g.update();
+        api.markDone(g.done);
+        return;
+      }
+      oLinear.set(String(linearSteps));
+      oBinary.set(String(binarySteps));
+      sg.update();
+      api.markDone(sg.done);
     });
 
     return () => { stop(); ro.disconnect(); fit.destroy(); };

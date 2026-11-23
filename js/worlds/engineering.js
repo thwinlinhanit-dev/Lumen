@@ -3,6 +3,8 @@
    ========================================================================== */
 
 import * as ui from '../ui.js';
+import * as contract from '../contract.js';
+import * as profile from '../profile.js';
 
 const NODES = [
   [0, 0], [2, 0], [4, 0], [6, 0], [8, 0],
@@ -76,6 +78,9 @@ export default {
     let maxStress = 0;
     let cost = 0;
     let collapsed = false;
+    let governing = 'bottom';
+    let utilization = 0;
+    const groupPeak = { bottom: 0, top: 0, diag: 0 };
 
     const host = ui.h('div', { class: 'canvas-host' });
     const canvas = ui.h('canvas');
@@ -85,6 +90,50 @@ export default {
     const badge = ui.h('div', { class: 'hud tl' },
       ui.h('span', { class: 'badge' }, ui.h('span', { class: 'led' }), 'Method of joints · 18 equations'));
     stage.appendChild(badge);
+
+    /* Wrap the truss surface into one switchable pane. */
+    const panePrimary = ui.h('div', { class: 'stage-pane' });
+    while (stage.firstChild) panePrimary.appendChild(stage.firstChild);
+    stage.appendChild(panePrimary);
+
+    /* ---- second instrument: compare three materials ---- */
+    const MATERIALS = [
+      { name: 'Steel', factor: 3, density: 7.8 },
+      { name: 'Aluminium', factor: 1.7, density: 2.7 },
+      { name: 'Wood', factor: 0.8, density: 0.6 }
+    ];
+    let instrument = 'eng';
+    let memberWidth = 40;
+    let material = 0;
+    let yieldLoad = 0;
+    let massPerMetre = 0;
+    let strengthToWeight = 0;
+
+    const paneSecond = ui.h('div', { class: 'stage-pane secondary-pane', style: { display: 'none' } });
+    const secondHead = ui.h('div', { class: 'hud tl' },
+      ui.h('span', { class: 'badge' }, ui.h('span', { class: 'led' }), 'Materials · a simple trade-off'));
+    const widthLine = ui.h('div', { class: 'sec-line' });
+    const loadLine = ui.h('div', { class: 'sec-line' });
+    const materialGrid = ui.h('div', { class: 'sec-grid' });
+    const materialCells = MATERIALS.map((m) => ui.h('div', { class: 'sec-cell' }, m.name));
+    for (const cell of materialCells) materialGrid.appendChild(cell);
+    paneSecond.appendChild(secondHead);
+    paneSecond.appendChild(widthLine);
+    paneSecond.appendChild(loadLine);
+    paneSecond.appendChild(materialGrid);
+    stage.appendChild(paneSecond);
+
+    function paintSecond() {
+      const mat = MATERIALS[material];
+      yieldLoad = memberWidth * mat.factor;
+      massPerMetre = memberWidth * mat.density;
+      strengthToWeight = massPerMetre > 0 ? yieldLoad / massPerMetre : 0;
+      widthLine.textContent = `${mat.name} · width ${memberWidth}.`;
+      loadLine.textContent = `Yield load ${yieldLoad.toFixed(1)} · mass per metre ${massPerMetre.toFixed(1)} · strength to weight ${strengthToWeight.toFixed(2)}.`;
+      materialCells.forEach((cell, i) => cell.classList.toggle('on', i === material));
+    }
+
+    paintSecond();
 
     const fit = ui.fitCanvas(canvas);
     const ctx = fit.ctx;
@@ -119,16 +168,26 @@ export default {
         forces = forces.map(() => 0);
         maxStress = 0;
         collapsed = true;
+        groupPeak.bottom = 0; groupPeak.top = 0; groupPeak.diag = 0;
+        governing = 'bottom';
+        utilization = 0;
         return;
       }
 
       forces = MEMBERS.map((_, m) => x[m]);
+      groupPeak.bottom = 0; groupPeak.top = 0; groupPeak.diag = 0;
       let worst = 0;
       MEMBERS.forEach(([, , g], m) => {
         const s = Math.abs(forces[m]) / Math.max(1, areas[g]);
+        if (s > groupPeak[g]) groupPeak[g] = s;
         if (s > worst) worst = s;
       });
       maxStress = worst;
+      governing = groupPeak.bottom >= groupPeak.top && groupPeak.bottom >= groupPeak.diag
+        ? 'bottom'
+        : (groupPeak.top >= groupPeak.diag ? 'top' : 'diag');
+      /* 1.00 means the governing member sits exactly at the FoS 2.5 allowable. */
+      utilization = YIELD > 0 ? maxStress / (YIELD / 2.5) : 0;
       collapsed = worst > YIELD;
 
       cost = MEMBERS.reduce((sum, [, , g], m) => {
@@ -250,6 +309,8 @@ export default {
     const oStress = ui.obs('Peak stress', 'MPa');
     const oCost = ui.obs('Material cost', '$');
     const oChord = ui.obs('Bottom chord force', 'kN');
+    const oGov = ui.obs('Governing group', '');
+    const oUtil = ui.obs('Peak utilisation', '%');
 
     const mk = (key, label, max) => ui.slider({
       label, min: 60, max: 900, step: 10, value: areas[key],
@@ -261,12 +322,49 @@ export default {
     const sTop = mk('top', 'Top chord', 900);
     const sDiag = mk('diag', 'Diagonals', 900);
 
+    const GOAL_COPY = {
+      p: 'Keep it standing after you thin the bottom chord — FoS ≥ 1.2.',
+      ls: 'Reach FoS ≥ 1.5 with the peak stress in the bottom chord.',
+      us: 'Carry 20 kN with a factor of safety of <b>2.5</b> — for under <b>$95</b>.',
+      uni: 'FoS 2.5 under $95 — and no group grossly overbuilt.'
+    };
+
+    function stageGoal() {
+      const stage = profile.worldStage('eng');
+      const fos = maxStress > 0 ? YIELD / maxStress : 0;
+      const sound = !collapsed && maxStress > 0;
+      let pass = false, progress = '';
+
+      if (stage === 'p') {
+        pass = sound && fos >= 1.2 && areas.bottom < areas.top;
+        progress = `FoS ${fos.toFixed(2)} · bottom ${areas.bottom} mm² · top ${areas.top} mm²`;
+      } else if (stage === 'ls') {
+        pass = sound && fos >= 1.5 && governing === 'bottom';
+        progress = `FoS ${fos.toFixed(2)} · peak in ${governing}`;
+      } else if (stage === 'uni') {
+        pass = sound && fos >= 2.5 && cost <= 95 && utilization >= 0.85;
+        progress = `$${cost.toFixed(0)} · FoS ${fos.toFixed(2)} · critical ${governing} @ ${(utilization * 100).toFixed(0)}%`;
+      } else {
+        pass = sound && fos >= 2.5 && cost <= 95;
+        progress = pass
+          ? `Held · critical ${governing}`
+          : `FoS ${fos.toFixed(2)} · $${cost.toFixed(0)} · limit ${governing}`;
+      }
+      return { stage, pass, progress };
+    }
+
+    let holdSince = 0;
+    let lastStage = null;
     const g = ui.goal(
-      'Carry 20 kN with a factor of safety of <b>2.5</b> — for under <b>$95</b>.',
-      () => ({
-        done: !collapsed && maxStress > 0 && YIELD / maxStress >= 2.5 && cost <= 95,
-        progress: `FoS ${(maxStress > 0 ? YIELD / maxStress : 0).toFixed(2)} · $${cost.toFixed(0)}`
-      })
+      '<span class="goal-copy">' + GOAL_COPY[profile.worldStage('eng')] + '</span>',
+      () => {
+        const s = stageGoal();
+        if (!s.pass) { holdSince = 0; return { done: false, progress: s.progress }; }
+        if (s.stage !== 'us' && s.stage !== 'uni') return { done: true, progress: s.progress };
+        const now = performance.now();
+        if (!holdSince) holdSince = now;
+        return { done: now - holdSince >= 1500, progress: s.progress };
+      }
     );
 
     coach.appendChild(ui.h('div', { class: 'kicker' },
@@ -276,11 +374,66 @@ export default {
       'Every line is a member and its colour is what the load is doing to it — blue stretched, pink squashed. This is a real solve, not an animation: eighteen equilibrium equations, solved each time you move a slider. Notice the bottom chord working hardest while the top only braces.'));
 
     coach.appendChild(ui.section('Goal', g.el));
-    coach.appendChild(ui.section('Observables', ui.obsList(oFos, oStress, oCost, oChord)));
+    coach.appendChild(ui.section('Observables', ui.obsList(oFos, oStress, oCost, oChord, oGov, oUtil)));
     coach.appendChild(ui.section('Sections', ui.controls(sBottom.el, sTop.el, sDiag.el)));
     coach.appendChild(ui.h('div', { class: 'hairline' }));
     coach.appendChild(ui.note(
-      'The solver is the <b>same linear system</b> the maths world teaches: 15 member forces plus 3 reactions, 18 equations. Steel at 250 MPa yield, $2 per kilogram — so strength and cost pull against each other, which is what engineering actually is.'));
+      'The solver is the <b>same linear system</b> the maths world teaches: 15 member forces plus 3 reactions, 18 equations. Steel at 250 MPa yield, $2 per kilogram — sample material figures as of 2024 — so strength and cost pull against each other, which is what engineering actually is.'));
+
+    /* ---- wrap the truss coach, then add the materials one ---- */
+    const coachPrimary = ui.h('div', { class: 'instrument-pane' });
+    while (coach.firstChild) coachPrimary.appendChild(coach.firstChild);
+    const coachSecond = ui.h('div', { class: 'instrument-pane', style: { display: 'none' } });
+    coach.appendChild(coachPrimary);
+    coach.appendChild(coachSecond);
+
+    const oYield = ui.obs('Yield load', '');
+    const oMass = ui.obs('Mass per metre', '');
+    const oRatio = ui.obs('Strength to weight', '');
+    const sWidth = ui.slider({
+      label: 'Member width', min: 10, max: 100, step: 5, value: memberWidth,
+      format: (v) => String(Math.round(v)),
+      onInput: (v) => { memberWidth = Math.round(v); paintSecond(); }
+    });
+    const sMaterial = ui.slider({
+      label: 'Material', min: 0, max: 2, step: 1, value: material,
+      format: (v) => MATERIALS[Math.round(v)].name,
+      onInput: (v) => { material = Math.round(v); paintSecond(); }
+    });
+    const sg = ui.goal(
+      'Reach a strength-to-weight ratio of at least <b>1.2</b>.',
+      () => ({ done: strengthToWeight >= 1.2, progress: strengthToWeight.toFixed(2) }),
+      'materials'
+    );
+    coachSecond.appendChild(ui.h('div', { class: 'kicker' },
+      ui.h('span', { class: 'bar' }), 'Engineering · materials'));
+    coachSecond.appendChild(ui.h('h2', { class: 'lesson-title' }, 'A wider member is not a free win'));
+    coachSecond.appendChild(ui.h('p', { class: 'lesson-body' },
+      'Width lifts the load a member can carry, but it adds mass in the same proportion. Switching material changes the two by different amounts, so the ratio is really a comparison between the three choices.'));
+    coachSecond.appendChild(ui.section('Goal', sg.el));
+    coachSecond.appendChild(ui.section('Observables', ui.obsList(oYield, oMass, oRatio)));
+    coachSecond.appendChild(ui.section('Member', ui.controls(sWidth.el, sMaterial.el)));
+    coachSecond.appendChild(ui.h('div', { class: 'hairline' }));
+    coachSecond.appendChild(ui.note(
+      'These factors and densities are a simplified comparison for the model, not engineering data: a single yield factor per material, mass proportional to width, and no buckling, joints or safety codes. The ratio cancels the width out, so the three cells show a genuinely like-for-like choice.'));
+
+    function setInstrument(id) {
+      instrument = id;
+      panePrimary.style.display = id === 'eng' ? '' : 'none';
+      paneSecond.style.display = id === 'materials' ? '' : 'none';
+      coachPrimary.style.display = id === 'eng' ? '' : 'none';
+      coachSecond.style.display = id === 'materials' ? '' : 'none';
+      switchSeg.select(id);
+      contract.selectInstrument(id);
+      if (id === 'materials') paintSecond(); else { fit.resize(); draw(); }
+      contract.useGoal(id);
+    }
+    const switchSeg = ui.segmented(
+      [{ id: 'eng', label: 'Truss' }, { id: 'materials', label: 'Materials' }],
+      'eng', setInstrument);
+    coach.appendChild(switchSeg);
+    contract.registerInstrument({ id: 'eng', activate: () => setInstrument('eng') });
+    contract.registerInstrument({ id: 'materials', activate: () => setInstrument('materials') });
 
     const ro = new ResizeObserver(() => draw());
     ro.observe(canvas);
@@ -288,14 +441,30 @@ export default {
     solve();
 
     const stop = ui.addTicker(() => {
-      draw();
-      const fos = maxStress > 0 ? YIELD / maxStress : 0;
-      oFos.set(fos.toFixed(2), fos >= 2.5);
-      oStress.set(maxStress.toFixed(0));
-      oCost.set(cost.toFixed(0), cost <= 95);
-      oChord.set((Math.abs(forces[1]) / 1000).toFixed(1));
-      g.update();
-      api.markDone(g.done);
+      if (instrument === 'eng') {
+        draw();
+        const s = stageGoal();
+        if (s.stage !== lastStage) {
+          lastStage = s.stage;
+          const copy = g.el.querySelector('.goal-copy');
+          if (copy) copy.innerHTML = GOAL_COPY[s.stage];
+        }
+        const fos = maxStress > 0 ? YIELD / maxStress : 0;
+        oFos.set(fos.toFixed(2), fos >= 2.5);
+        oStress.set(maxStress.toFixed(0));
+        oCost.set(cost.toFixed(0), cost <= 95);
+        oChord.set((Math.abs(forces[1]) / 1000).toFixed(1));
+        oGov.set(governing);
+        oUtil.set((utilization * 100).toFixed(0));
+        g.update();
+        api.markDone(g.done);
+        return;
+      }
+      oYield.set(yieldLoad.toFixed(1));
+      oMass.set(massPerMetre.toFixed(1));
+      oRatio.set(strengthToWeight.toFixed(2));
+      sg.update();
+      api.markDone(sg.done);
     });
 
     return () => { stop(); ro.disconnect(); fit.destroy(); };

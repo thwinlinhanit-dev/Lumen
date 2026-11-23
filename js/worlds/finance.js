@@ -3,6 +3,7 @@
    ========================================================================== */
 
 import * as ui from '../ui.js';
+import * as contract from '../contract.js';
 
 const YEARS = 40;
 const MONTHS = YEARS * 12;
@@ -381,7 +382,7 @@ export default {
     coachShop.appendChild(ui.section('Budget', ui.controls(sBudget.el)));
     coachShop.appendChild(ui.h('div', { class: 'hairline' }));
     coachShop.appendChild(ui.note(
-      'Prices are a made-up shelf, not a market. The number left can go below zero — going over budget is shown as arithmetic, not as a warning, because that is how it happens in life.'));
+      'Prices are a made-up shelf, not a market — sample figures as of 2024. The number left can go below zero — going over budget is shown as arithmetic, not as a warning, because that is how it happens in life.'));
 
     coach.appendChild(coachChart);
     coach.appendChild(coachShop);

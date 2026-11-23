@@ -2,7 +2,7 @@
    notes.js — the design notes reader, opened from the top bar
    ========================================================================== */
 
-import { h } from './ui.js';
+import { h, trapFocus } from './ui.js';
 import { renderMarkdown } from './markdown.js';
 
 const DOCS = [
@@ -57,6 +57,8 @@ function build() {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && root && root.isConnected) closeNotes();
   });
+
+  trapFocus(root);
 }
 
 function paintSeg() {

@@ -44,12 +44,14 @@ function renderTable(rows) {
   if (rest.length && isSep(rest[0])) rest = rest.slice(1);
 
   let html = '<table><thead><tr>' +
-    head.map((c) => `<th>${inline(c)}</th>`).join('') +
+    head.map((c) => `<th scope="col">${inline(c)}</th>`).join('') +
     '</tr></thead><tbody>';
 
   for (const r of rest) {
     const cs = tableCells(r);
-    html += '<tr>' + head.map((_, i) => `<td>${inline(cs[i] || '')}</td>`).join('') + '</tr>';
+    html += '<tr>' + head.map((_, i) => (i === 0
+      ? `<th scope="row">${inline(cs[i] || '')}</th>`
+      : `<td>${inline(cs[i] || '')}</td>`)).join('') + '</tr>';
   }
   return html + '</tbody></table>';
 }

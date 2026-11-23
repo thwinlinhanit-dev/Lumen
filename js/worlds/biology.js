@@ -3,6 +3,7 @@
    ========================================================================== */
 
 import * as ui from '../ui.js';
+import * as contract from '../contract.js';
 
 const N = 108;
 const BINS = 18;
@@ -46,6 +47,59 @@ export default {
     const badge = ui.h('div', { class: 'hud tl' },
       ui.h('span', { class: 'badge live' }, ui.h('span', { class: 'led' }), 'Population evolving'));
     stage.appendChild(badge);
+
+    /* Wrap the evolution surface into one switchable pane. */
+    const panePrimary = ui.h('div', { class: 'stage-pane' });
+    while (stage.firstChild) panePrimary.appendChild(stage.firstChild);
+    stage.appendChild(panePrimary);
+
+    /* ---- second instrument: a one-locus Punnett square ---- */
+    let instrument = 'bio';
+    let alleleA = 0;
+    let alleleB = 0;
+    let domFraction = 0;
+    let hetFraction = 0;
+    let genotypeCode = 0;
+    const combos = [];
+
+    const paneSecond = ui.h('div', { class: 'stage-pane secondary-pane', style: { display: 'none' } });
+    const secondHead = ui.h('div', { class: 'hud tl' },
+      ui.h('span', { class: 'badge' }, ui.h('span', { class: 'led' }), 'Genetics · one locus'));
+    const alleleLine = ui.h('div', { class: 'sec-line' });
+    const fracLine = ui.h('div', { class: 'sec-line' });
+    const comboGrid = ui.h('div', { class: 'sec-grid' });
+    paneSecond.appendChild(secondHead);
+    paneSecond.appendChild(alleleLine);
+    paneSecond.appendChild(fracLine);
+    paneSecond.appendChild(comboGrid);
+    stage.appendChild(paneSecond);
+
+    function paintSecond() {
+      const alleles = [alleleA, alleleB];
+      combos.length = 0;
+      for (let i = 0; i < 2; i++) {
+        for (let j = 0; j < 2; j++) combos.push(String(alleles[i]) + String(alleles[j]));
+      }
+      let domCount = 0;
+      let hetCount = 0;
+      for (const combo of combos) {
+        if (combo.indexOf('1') >= 0) domCount++;
+        if (combo[0] !== combo[1]) hetCount++;
+      }
+      domFraction = domCount / combos.length;
+      hetFraction = hetCount / combos.length;
+      genotypeCode = alleleA * 2 + alleleB;
+      alleleLine.textContent = `Carried alleles: ${alleleA ? 'A' : 'a'} from parent A, ${alleleB ? 'A' : 'a'} from parent B.`;
+      fracLine.textContent = `Dominant ${domFraction.toFixed(2)} · heterozygous ${hetFraction.toFixed(2)} · genotype code ${genotypeCode}`;
+      comboGrid.innerHTML = '';
+      for (const combo of combos) {
+        const cell = ui.h('div', { class: 'sec-cell' }, combo.replace(/1/g, 'A').replace(/0/g, 'a'));
+        if (combo.indexOf('1') >= 0) cell.classList.add('on');
+        comboGrid.appendChild(cell);
+      }
+    }
+
+    paintSecond();
 
     const fit = ui.fitCanvas(canvas);
     const ctx = fit.ctx;
@@ -220,13 +274,21 @@ export default {
       onInput: (v) => { mutation = v; }
     });
 
+    /* The goal must be stable at rest: within 2% of the optimum, and it has
+       to stay there for two seconds — a lucky single frame is not enough. */
+    const hold = ui.holdTracker(2000);
+
     const g = ui.goal(
-      'Pull the population to within <b>2%</b> of the optimum — and hold it.',
+      'Pull the population to within <b>2%</b> of the optimum — and hold it there for two seconds.',
       () => {
-        const gap = Math.abs(mean - optimum);
+        const at = Math.abs(mean - optimum) < 0.02 && generation >= 8;
         return {
-          done: gap < 0.02 && generation >= 8,
-          progress: gap < 0.02 ? 'at the optimum' : `gap ${(gap * 100).toFixed(0)}%`
+          done: hold.met,
+          progress: hold.met
+            ? 'held at the optimum'
+            : at
+              ? `holding · ${hold.secondsLeft.toFixed(1)} s to go`
+              : `gap ${(Math.abs(mean - optimum) * 100).toFixed(0)}%`
         };
       }
     );
@@ -247,24 +309,88 @@ export default {
     coach.appendChild(ui.note(
       'Selection here is a Gaussian fitness landscape — a simplification, but the mean really does move and the variance really does respond. The same engine, at a different timescale, is the ecosystem builder and the phylogeny view.'));
 
+    /* ---- wrap the evolution coach, then add the genetics one ---- */
+    const coachPrimary = ui.h('div', { class: 'instrument-pane' });
+    while (coach.firstChild) coachPrimary.appendChild(coach.firstChild);
+    const coachSecond = ui.h('div', { class: 'instrument-pane', style: { display: 'none' } });
+    coach.appendChild(coachPrimary);
+    coach.appendChild(coachSecond);
+
+    const oDom = ui.obs('Dominant fraction', '');
+    const oHet = ui.obs('Heterozygous fraction', '');
+    const oCode = ui.obs('Genotype code', '');
+    const sAlleleA = ui.slider({
+      label: 'Allele from A', min: 0, max: 1, step: 1, value: alleleA,
+      format: (v) => (Math.round(v) ? 'A' : 'a'),
+      onInput: (v) => { alleleA = Math.round(v); paintSecond(); }
+    });
+    const sAlleleB = ui.slider({
+      label: 'Allele from B', min: 0, max: 1, step: 1, value: alleleB,
+      format: (v) => (Math.round(v) ? 'A' : 'a'),
+      onInput: (v) => { alleleB = Math.round(v); paintSecond(); }
+    });
+    const sg = ui.goal(
+      'Reach a dominant fraction of at least <b>0.75</b>.',
+      () => ({ done: domFraction >= 0.75, progress: `${domFraction.toFixed(2)} dominant` }),
+      'genetics'
+    );
+    coachSecond.appendChild(ui.h('div', { class: 'kicker' },
+      ui.h('span', { class: 'bar' }), 'Biology · genetics'));
+    coachSecond.appendChild(ui.h('h2', { class: 'lesson-title' }, 'Four boxes hold one locus'));
+    coachSecond.appendChild(ui.h('p', { class: 'lesson-body' },
+      'One individual carries an allele from each parent. Self it and the square shows the four allele pairs its offspring can receive — each one equally likely.'));
+    coachSecond.appendChild(ui.section('Goal', sg.el));
+    coachSecond.appendChild(ui.section('Observables', ui.obsList(oDom, oHet, oCode)));
+    coachSecond.appendChild(ui.section('Alleles', ui.controls(sAlleleA.el, sAlleleB.el)));
+    coachSecond.appendChild(ui.h('div', { class: 'hairline' }));
+    coachSecond.appendChild(ui.note(
+      'This is a single-locus square with complete dominance: two alleles, four equally likely boxes. Real inheritance spreads across many loci with linkage and environmental effects, all left out here.'));
+
+    function setInstrument(id) {
+      instrument = id;
+      panePrimary.style.display = id === 'bio' ? '' : 'none';
+      paneSecond.style.display = id === 'genetics' ? '' : 'none';
+      coachPrimary.style.display = id === 'bio' ? '' : 'none';
+      coachSecond.style.display = id === 'genetics' ? '' : 'none';
+      switchSeg.select(id);
+      contract.selectInstrument(id);
+      if (id === 'genetics') paintSecond(); else { fit.resize(); draw(); }
+      contract.useGoal(id);
+    }
+    const switchSeg = ui.segmented(
+      [{ id: 'bio', label: 'Evolution' }, { id: 'genetics', label: 'Genetics' }],
+      'bio', setInstrument);
+    coach.appendChild(switchSeg);
+    contract.registerInstrument({ id: 'bio', activate: () => setInstrument('bio') });
+    contract.registerInstrument({ id: 'genetics', activate: () => setInstrument('genetics') });
+
     const ro = new ResizeObserver(() => draw());
     ro.observe(canvas);
 
     reseed();
 
     const stop = ui.addTicker((dt) => {
-      timer += dt;
-      if (timer > 0.34) {
-        timer = 0;
-        step();
+      if (instrument === 'bio') {
+        timer += dt;
+        if (timer > 0.34) {
+          timer = 0;
+          step();
+        }
+        draw();
+        oGen.set(String(generation), generation > 8);
+        oMean.set(mean.toFixed(3));
+        oSd.set(sd.toFixed(3));
+        oGap.set(((Math.abs(mean - optimum)) * 100).toFixed(1) + '%');
+        hold.update(Math.abs(mean - optimum) < 0.02 && generation >= 8, dt);
+        g.update();
+        api.markDone(g.done);
+        return;
       }
-      draw();
-      oGen.set(String(generation), generation > 8);
-      oMean.set(mean.toFixed(3));
-      oSd.set(sd.toFixed(3));
-      oGap.set(((Math.abs(mean - optimum)) * 100).toFixed(1) + '%');
-      g.update();
-      api.markDone(g.done);
+      oDom.set(domFraction.toFixed(2));
+      oHet.set(hetFraction.toFixed(2));
+      oCode.set(String(genotypeCode));
+      sg.update();
+      api.markDone(sg.done);
     });
 
     return () => { stop(); ro.disconnect(); fit.destroy(); };

@@ -4,14 +4,14 @@
 
 import { h } from './ui.js';
 import * as profile from './profile.js';
-import { openPicker, openPlacement } from './lesson-run.js';
-import { lessonsFor } from './lessons.js';
+import { openPicker, openFastPicker, openPlacement } from './lesson-run.js';
+import { lessonsFor, FAST_PATH } from './lessons.js';
 
 export function mountStageBar(world) {
   const worldId = world.id;
 
   const seg = h('div', { class: 'seg stage-seg' });
-  const modeBtn = h('button', { class: 'mode-pill', type: 'button', 'aria-label': 'Learning mode' });
+  const modeBtn = h('button', { class: 'mode-pill', type: 'button' });
   const meta = h('div', { class: 'stagebar-meta' });
 
   const reset = h('button', {
@@ -29,7 +29,7 @@ export function mountStageBar(world) {
   const buttons = ['p', 'ls', 'us', 'uni'].map((s) => {
     const b = h('button', {
       type: 'button',
-      'aria-label': profile.STAGE_LABEL[s],
+      'aria-label': `${profile.STAGE_LABEL[s]} (${profile.STAGE_SHORT[s]})`,
       onclick: () => profile.setWorldStage(worldId, s)
     }, profile.STAGE_SHORT[s]);
     b.dataset.stage = s;
@@ -53,9 +53,18 @@ export function mountStageBar(world) {
     h('span', { class: 'sl-label' }, lessonCount ? 'Start a lesson' : 'No lessons yet'),
     h('span', { class: 'sl-count' }, lessonCount ? String(lessonCount) : ''));
 
+  const fastCount = (FAST_PATH[worldId] || []).length;
+  const fast = h('button', {
+    class: 'stagebar-fast',
+    type: 'button',
+    disabled: fastCount === 0,
+    onclick: () => openFastPicker(world)
+  }, `Adult path${fastCount ? ' · ' + fastCount : ''}`);
+
   const el = h('div', { class: 'stagebar' },
     h('div', { class: 'stagebar-row' }, seg, modeBtn),
     learn,
+    fast,
     h('div', { class: 'stagebar-foot' },
       meta,
       h('div', { class: 'stagebar-links' }, place, reset)));
@@ -68,6 +77,7 @@ export function mountStageBar(world) {
 
     const mode = profile.getProfile().mode;
     modeBtn.textContent = profile.MODE_LABEL[mode];
+    modeBtn.setAttribute('aria-label', `${profile.MODE_LABEL[mode]} — Learning mode`);
     modeBtn.setAttribute('aria-pressed', String(mode === 'adult'));
 
     const session = mode === 'adult' ? '20–25' : profile.SESSION_MINUTES[stage];

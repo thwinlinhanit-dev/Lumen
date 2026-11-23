@@ -3,6 +3,7 @@
    ========================================================================== */
 
 import * as ui from '../ui.js';
+import * as contract from '../contract.js';
 
 const SRC_X = 22;
 const BUF_W = 280;
@@ -455,7 +456,7 @@ export default {
       coachWave.style.display = id === 'wave' ? '' : 'none';
       coachPush.style.display = id === 'push' ? '' : 'none';
       switchSeg.select(id);
-      if (id === 'push') { pFit.resize(); drawPush(); } else { layout(); }
+      if (id === 'push') { pFit.resize(); drawPush(); } else { fit.resize(); layout(); }
       contract.useGoal(id);
     }
 

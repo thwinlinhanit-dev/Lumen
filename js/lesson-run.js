@@ -3,9 +3,9 @@
    A lesson is data. A beat drives the world through the contract.
    ========================================================================== */
 
-import { h, addTicker } from './ui.js';
+import { h, addTicker, trapFocus } from './ui.js';
 import * as contract from './contract.js';
-import { lessonsFor } from './lessons.js';
+import { LESSONS, lessonsFor, DIAGNOSTICS, FAST_PATH, ENRICHMENT, TROUBLE_QUIZ } from './lessons.js';
 import * as profile from './profile.js';
 
 let stageEl = null;
@@ -120,13 +120,20 @@ export function start(lesson) {
 
   const el = h('div', { class: 'lesson-strip' });
   stageEl.appendChild(el);
+  /* A top-of-stage badge makes it unmistakable that the instrument is now
+     lesson-driven, even when the opening beat is only narration. */
+  const badge = h('div', { class: 'lesson-badge' },
+    h('span', { class: 'lb-dot' }), 'LESSON · ' + lesson.title);
+  stageEl.appendChild(badge);
   stageEl.classList.add('stage-lesson');
 
-  run = { lesson, i: -1, t: 0, el, off: null, missing: [], applied: [], warn: '', finished: false };
+  run = { lesson, i: -1, t: 0, el, badge, off: null, missing: [], applied: [], warn: '', finished: false };
 
-  /* A lesson may need a different instrument from the one the world opens on. */
-  if (lesson.instrument && !contract.useInstrument(lesson.instrument)) {
-    run.warn = `This lesson needs the "${lesson.instrument}" instrument, which this world does not have.`;
+  /* A lesson may need a different instrument. One that names none returns the
+     world to the instrument it opens on, so it never inherits the last lesson's. */
+  const wanted = lesson.instrument || contract.defaultInstrument();
+  if (wanted && contract.instrumentId() !== wanted && !contract.useInstrument(wanted)) {
+    run.warn = `This lesson needs the "${wanted}" instrument, which this world does not have.`;
   }
 
   /* put the instrument into the lesson's own starting state before beat 0 */
@@ -148,6 +155,7 @@ export function stop() {
   if (!run) return;
   if (run.off) { run.off(); run.off = null; }
   if (run.el && run.el.parentNode) run.el.parentNode.removeChild(run.el);
+  if (run.badge && run.badge.parentNode) run.badge.parentNode.removeChild(run.badge);
   if (stageEl) stageEl.classList.remove('stage-lesson');
   run = null;
 }
@@ -235,9 +243,17 @@ function render() {
           const b = ev.currentTarget;
           if (b.dataset.locked) return;
           const ok = idx === answer;
-          for (const other of opts.children) other.dataset.locked = '1';
-          b.classList.add(ok ? 'ok' : 'no');
-          setTimeout(() => advance(), 700);
+          if (ok) {
+            /* Correct: lock the row and move on. */
+            for (const other of opts.children) other.dataset.locked = '1';
+            b.classList.add('ok');
+            setTimeout(() => advance(), 700);
+          } else {
+            /* Wrong: this option is spent, the rest stay open. The lesson
+               never advances on a wrong answer (AGENTS §5). */
+            b.dataset.locked = '1';
+            b.classList.add('no');
+          }
         }
       }, opt));
     });
@@ -264,6 +280,57 @@ function nextLessonFrom(lesson) {
   return i >= 0 && i + 1 < list.length ? list[i + 1] : null;
 }
 
+function findLesson(id) {
+  return LESSONS.find((l) => l.id === id) || Object.values(FAST_PATH).flat().find((l) => l.id === id) || null;
+}
+
+/** The corpus-style wrap-up: key idea, why, common trap, worked example, sources. */
+function addEnrichment(el, lesson) {
+  const ex = ENRICHMENT[lesson.id];
+  if (!ex) return;
+
+  if (ex.key) el.appendChild(h('div', { class: 'ls-ex' },
+    h('span', { class: 'ls-ex-tag' }, 'Key idea'), ex.key));
+  if (ex.why) el.appendChild(h('div', { class: 'ls-ex' },
+    h('span', { class: 'ls-ex-tag' }, 'Why'), ex.why));
+  if (ex.mistake) el.appendChild(h('div', { class: 'ls-ex ls-ex-trap' },
+    h('span', { class: 'ls-ex-tag' }, 'Common mistake'), ex.mistake));
+
+  if (ex.worked) {
+    const body = h('div', { class: 'ls-ex-worked-body', style: { display: 'none' } },
+      h('div', { class: 'ls-ex-q' }, ex.worked.q),
+      h('ol', { class: 'ls-ex-steps' }, ...(ex.worked.steps || []).map((s) => h('li', {}, s))),
+      h('div', { class: 'ls-ex-a' }, 'Answer · ' + ex.worked.a));
+    const toggle = h('button', {
+      class: 'ls-ex-toggle', type: 'button',
+      onclick: () => {
+        const open = body.style.display !== 'none';
+        body.style.display = open ? 'none' : '';
+        toggle.textContent = open ? 'Reveal working' : 'Hide working';
+      }
+    }, 'Reveal working');
+    el.appendChild(h('div', { class: 'ls-ex ls-ex-worked' },
+      h('span', { class: 'ls-ex-tag' }, 'Worked example'), toggle, body));
+  }
+
+  if (ex.prereqs && ex.prereqs.length) {
+    const row = h('div', { class: 'ls-ex' },
+      h('span', { class: 'ls-ex-tag' }, 'Builds on'));
+    for (const pid of ex.prereqs) {
+      const target = findLesson(pid);
+      row.appendChild(h('button', {
+        class: 'ls-prereq', type: 'button',
+        onclick: () => { if (target) start(target); }
+      }, target ? target.title : pid));
+    }
+    el.appendChild(row);
+  }
+  if (ex.sources && ex.sources.length) {
+    el.appendChild(h('div', { class: 'ls-ex' },
+      h('span', { class: 'ls-ex-tag' }, 'Sources'), ex.sources.join(' · ')));
+  }
+}
+
 function finish() {
   if (!run) return;
   if (run.off) { run.off(); run.off = null; }
@@ -280,6 +347,7 @@ function finish() {
   el.appendChild(h('div', { class: 'ls-text' }, `${title} — done.`));
   el.appendChild(h('div', { class: 'ls-hint' },
     'Not held yet: come back in three days and do it again, and the dot in the rail goes green.'));
+  addEnrichment(el, run.lesson);
 
   if (next) {
     el.appendChild(h('div', { class: 'ls-actions' },
@@ -297,7 +365,7 @@ function finish() {
 function buildModal(title) {
   const body = h('div', { class: 'modal-body' });
 
-  const el = h('div', { class: 'modal-backdrop', role: 'dialog', 'aria-modal': 'true' },
+  const el = h('div', { class: 'modal-backdrop', role: 'dialog', 'aria-modal': 'true', 'aria-label': title },
     h('div', { class: 'modal' },
       h('div', { class: 'modal-head' },
         h('span', { class: 'modal-title' }, title),
@@ -308,8 +376,13 @@ function buildModal(title) {
         }, 'Close')),
       body));
 
-  const m = { el, body, onKey: null };
+  const m = { el, body, onKey: null, lastFocus: document.activeElement };
   document.body.appendChild(el);
+
+  /* Keyboard: Escape closes, Tab never leaves the dialog. */
+  trapFocus(el);
+  const first = el.querySelector('.modal-close');
+  if (first) first.focus({ preventScroll: true });
 
   m.onKey = (e) => {
     if (e.key === 'Escape') closeModal(m);
@@ -323,29 +396,23 @@ function closeModal(m) {
   if (!m) return;
   if (m.onKey) document.removeEventListener('keydown', m.onKey);
   if (m.el && m.el.parentNode) m.el.remove();
+  const back = m.lastFocus;
+  if (back && typeof back.focus === 'function' && back.isConnected) {
+    try { back.focus({ preventScroll: true }); } catch (e) { /* ignore */ }
+  }
+}
+
+/** Modal shell for the shell's own dialogs (snapshots, search). */
+export function openModal(title) {
+  const m = buildModal(title);
+  return { el: m.el, body: m.body, close: () => closeModal(m) };
 }
 
 /* ---------- picker ---------- */
 
-export function openPicker(world) {
-  const list = lessonsFor(world.id);
-  const stage = profile.worldStage(world.id);
-  const m = buildModal(`Lessons · ${world.name}`);
-
-  if (!list.length) {
-    m.body.appendChild(h('p', { class: 'modal-copy' },
-      'No lessons authored for this world yet. The instruments above are free play.'));
-    return;
-  }
-
-  m.body.appendChild(h('p', { class: 'modal-copy' },
-    'Short guided sequences that drive the instrument for you. Your stage is set per world.'));
-
-  const sorted = list.slice().sort((a, b) => {
-    const order = ['p', 'ls', 'us', 'uni'];
-    return order.indexOf(a.stage) - order.indexOf(b.stage);
-  });
-
+function addCards(m, list, stage) {
+  const order = ['p', 'ls', 'us', 'uni'];
+  const sorted = list.slice().sort((a, b) => order.indexOf(a.stage) - order.indexOf(b.stage));
   for (const lesson of sorted) {
     m.body.appendChild(h('button', {
       class: 'lesson-card' + (lesson.stage === stage ? ' current' : ''),
@@ -362,30 +429,105 @@ export function openPicker(world) {
   }
 }
 
+export function openPicker(world) {
+  const list = lessonsFor(world.id);
+  const m = buildModal(`Lessons · ${world.name}`);
+
+  if (!list.length) {
+    m.body.appendChild(h('p', { class: 'modal-copy' },
+      'No lessons authored for this world yet. The instruments above are free play.'));
+    return;
+  }
+
+  m.body.appendChild(h('p', { class: 'modal-copy' },
+    'Short guided sequences that drive the instrument for you. Your stage is set per world.'));
+  addCards(m, list, profile.worldStage(world.id));
+}
+
+/** The adult route: six lessons chosen for what an adult can use immediately. */
+export function openFastPicker(world) {
+  const list = FAST_PATH[world.id] || [];
+  const m = buildModal(`Adult path · ${world.name}`);
+
+  if (!list.length) {
+    m.body.appendChild(h('p', { class: 'modal-copy' },
+      'No adult path authored for this world yet. Use the ladder instead.'));
+    return;
+  }
+
+  m.body.appendChild(h('p', { class: 'modal-copy' },
+    'Six lessons picked for the ideas you can actually use. This is a different route through the subject, not a summary of the ladder.'));
+  addCards(m, list, profile.worldStage(world.id));
+}
+
 /* ---------- self-placement ---------- */
 
-const PLACEMENT = [
-  ['p', 'I have never met this subject, or only at school a long time ago.'],
-  ['ls', 'I know the basics — the words, some rules, a few formulas.'],
-  ['us', 'I can do standard problems, but I am not sure why the rules hold.'],
-  ['uni', 'I am comfortable with the formal version and the derivations.']
-];
+const LENS_LABEL = {
+  play: 'hands-on',
+  compute: 'arithmetic',
+  derive: 'reasoning',
+  apply: 'applying it',
+  misconception: 'a common trap',
+  trouble: 'a lesson trap'
+};
 
 export function openPlacement(world) {
+  const base = (DIAGNOSTICS[world.id] || []).slice();
+  const trap = TROUBLE_QUIZ[world.id];
+  if (trap) base.push({ lens: 'trouble', stage: 'us', q: trap.q, options: trap.options, answer: trap.answer });
+  const items = base;
   const m = buildModal('Where should I start?');
-  m.body.appendChild(h('p', { class: 'modal-copy' },
-    'Pick the hardest statement you are confident about. This sets the stage for this world only, and you can change it any time.'));
 
-  for (const [stage, text] of PLACEMENT) {
-    m.body.appendChild(h('button', {
-      class: 'place-opt' + (profile.worldStage(world.id) === stage ? ' current' : ''),
-      type: 'button',
-      onclick: () => {
-        profile.setWorldStage(world.id, stage);
-        closeModal(m);
-      }
-    },
-      h('span', { class: 'po-stage' }, profile.STAGE_SHORT[stage]),
-      h('span', { class: 'po-text' }, text)));
+  if (!items.length) {
+    m.body.appendChild(h('p', { class: 'modal-copy' },
+      'No diagnostic items are authored for this world yet. Choose a stage above instead.'));
+    return;
+  }
+
+  m.body.appendChild(h('p', { class: 'modal-copy' },
+    'Six short questions: exploring, arithmetic, reasoning, applying it, and two common traps. The hardest rung you clear sets this world’s stage.'));
+
+  const answers = new Array(items.length).fill(null);
+  const result = h('div', { class: 'dx-result' });
+
+  items.forEach((item, idx) => {
+    const opts = h('div', { class: 'dx-opts' });
+    item.options.forEach((text, oi) => {
+      opts.appendChild(h('button', {
+        class: 'dx-opt', type: 'button',
+        onclick: (ev) => {
+          if (answers[idx] !== null) return;
+          answers[idx] = oi;
+          const b = ev.currentTarget;
+          for (const other of opts.children) other.dataset.locked = '1';
+          b.classList.add(oi === item.answer ? 'ok' : 'no');
+          if (answers.every((a) => a !== null)) finishPlacement();
+        }
+      }, text));
+    });
+    m.body.appendChild(h('div', { class: 'dx-item' },
+      h('div', { class: 'dx-q' }, `${idx + 1}. ${item.q}`),
+      h('div', { class: 'dx-lens' }, LENS_LABEL[item.lens] || item.lens),
+      opts));
+  });
+
+  m.body.appendChild(result);
+
+  function finishPlacement() {
+    const cleared = items.filter((it, i) => answers[i] === it.answer);
+    const missed = items.filter((it, i) => answers[i] !== it.answer);
+    const best = cleared.reduce(
+      (acc, it) => STAGE_ORDER.indexOf(it.stage) > STAGE_ORDER.indexOf(acc) ? it.stage : acc,
+      'p'
+    );
+    profile.setWorldStage(world.id, best);
+    result.innerHTML = '';
+    result.appendChild(h('div', { class: 'dx-head' }, `Placed at ${profile.STAGE_LABEL[best]}.`));
+    result.appendChild(h('div', { class: 'dx-why' },
+      `You cleared ${cleared.length} of ${items.length}: ${cleared.map((c) => LENS_LABEL[c.lens]).join(', ') || 'none'}.` +
+      (missed.length
+        ? ` To reach the next rung, revisit ${missed.map((c) => LENS_LABEL[c.lens]).join(', ')}.`
+        : ` All ${items.length} cleared — this world starts at university.`)));
+    result.classList.add('show');
   }
 }

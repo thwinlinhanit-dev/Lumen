@@ -4,6 +4,56 @@
 
 import { registerParam, registerObs, registerGoal, parseNumber } from './contract.js';
 
+/**
+ * Keep Tab cycling inside a dialog container (notes overlay, modals).
+ * Call once, after the container is in the document.
+ */
+export function trapFocus(container) {
+  const SEL = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+  container.addEventListener('keydown', (e) => {
+    if (e.key !== 'Tab') return;
+    const items = Array.prototype.filter.call(
+      container.querySelectorAll(SEL),
+      (n) => !n.disabled && n.offsetWidth > 0 && n.offsetHeight > 0
+    );
+    if (!items.length) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus({ preventScroll: true });
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus({ preventScroll: true });
+    }
+  });
+}
+
+/**
+ * A goal must be stable at rest. A holdTracker lets a world require its
+ * condition to stay true continuously for `ms` before `met` flips; drag the
+ * condition away and it resets. Call `update(ok, dt)` from the world's ticker
+ * (dt in seconds), and read `met` inside ui.goal's check.
+ */
+export function holdTracker(ms = 2000) {
+  let acc = 0;
+  let met = false;
+  return {
+    update(ok, dt) {
+      if (ok) {
+        acc = Math.min(ms, acc + (dt || 0) * 1000);
+        if (acc >= ms) met = true;
+      } else {
+        acc = 0;
+        met = false;
+      }
+      return met;
+    },
+    get met() { return met; },
+    get secondsLeft() { return Math.max(0, (ms - acc) / 1000); }
+  };
+}
+
 export function h(tag, attrs, ...kids) {
   const el = document.createElement(tag);
   if (attrs) {
@@ -41,9 +91,47 @@ export function clear(el) {
 /* ---------- coach building blocks ---------- */
 
 export function section(title, ...kids) {
-  return h('div', { class: 'section', dataset: { title } },
+  /* A stable role for stage gating, so CSS never has to match on prose.
+     New sections should extend ROLE_OF rather than inventing title strings. */
+  const role = ROLE_OF[title] || '';
+  return h('div', {
+    class: 'section',
+    dataset: role ? { title, role } : { title }
+  },
     h('div', { class: 'section-head' }, h('h3', {}, title)),
     ...kids);
+}
+
+const ROLE_OF = {
+  Observables: 'metrics',
+  Selection: 'metrics',
+  Critique: 'critique'
+};
+
+/** Two or more curated links out of this world into the content graph. */
+export function connections(links, onNavigate) {
+  const rows = links.map((l) => h('button', {
+    class: 'xlink', type: 'button',
+    onclick: () => onNavigate(l.id)
+  },
+    h('span', { class: 'xl-name' }, l.name),
+    h('span', { class: 'xl-why' }, l.why),
+    h('span', { class: 'xl-go', html: '&rarr;' })));
+  return section('Connections', h('div', { class: 'xlinks' }, ...rows));
+}
+
+/** The same concept seen five ways. The stage gates which rows are shown. */
+const LENS_LABELS = {
+  play: 'Play', story: 'Story', notation: 'Notation', proof: 'Proof', apply: 'Apply'
+};
+
+export function lenses(map) {
+  const rows = Object.keys(LENS_LABELS)
+    .filter((k) => map[k])
+    .map((k) => h('div', { class: `lens-row lens-${k}` },
+      h('span', { class: 'lens-key' }, LENS_LABELS[k]),
+      h('span', { class: 'lens-text' }, map[k])));
+  return section('Lenses', h('div', { class: 'lenses' }, ...rows));
 }
 
 export function note(html) {
@@ -109,6 +197,8 @@ export function obs(label, unit = '') {
   const el = h('div', { class: 'obs' }, h('span', { class: 'k' }, label), v);
 
   let last = '—';
+  let hadFinite = false;
+  let warnedNaN = false;
 
   registerObs({
     label,
@@ -122,6 +212,18 @@ export function obs(label, unit = '') {
       last = String(text);
       num.textContent = text;
       v.classList.toggle('hot', !!hot);
+
+      /* AGENTS invariant 5: an observable must stay numeric-parseable.
+         A status string after a number parses as NaN, and any lesson waiting
+         on this observable would hang forever — say so, once per incident. */
+      const n = parseNumber(last);
+      if (Number.isFinite(n)) {
+        hadFinite = true;
+        warnedNaN = false;
+      } else if (hadFinite && !warnedNaN) {
+        warnedNaN = true;
+        console.warn(`observable "${label}" was set to "${last}" — it no longer parses as a number. Put the status in a separate observable; a lesson waiting on this would hang.`);
+      }
     }
   };
 }

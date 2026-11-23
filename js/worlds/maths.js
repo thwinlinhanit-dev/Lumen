@@ -3,6 +3,7 @@
    ========================================================================== */
 
 import * as ui from '../ui.js';
+import * as contract from '../contract.js';
 
 export default {
   id: 'maths',
@@ -213,14 +214,16 @@ export default {
     let bObjects = 12;
     let bGroupCount = 4;
     let bAssign = new Array(bObjects).fill(0);
+    let bCounts = new Array(bGroupCount + 1).fill(0);
     const bPos = [];
 
     const BLOCK_COLOURS = ['#2a3441', '#a78bfa', '#5ac8fa', '#3ddc97', '#f5b83d', '#fb7185', '#a3e635'];
 
+    /* Reuse one buffer: a fresh array every frame was GC pressure on a phone. */
     function blockCounts() {
-      const out = new Array(bGroupCount + 1).fill(0);
-      for (const a of bAssign) if (a > 0) out[a]++;
-      return out;
+      for (let g = 0; g <= bGroupCount; g++) bCounts[g] = 0;
+      for (const a of bAssign) if (a > 0) bCounts[a]++;
+      return bCounts;
     }
 
     function blocksPlaced() {
@@ -230,9 +233,15 @@ export default {
     }
 
     function blocksEven() {
-      const used = blockCounts().slice(1);
+      blockCounts();
       if (blocksPlaced() !== bObjects || bObjects <= 0) return false;
-      return Math.max(...used) === Math.min(...used);
+      let min = Infinity, max = -Infinity;
+      for (let g = 1; g <= bGroupCount; g++) {
+        const n = bCounts[g];
+        if (n < min) min = n;
+        if (n > max) max = n;
+      }
+      return max === min;
     }
 
     function layoutDots(list, x0, y0, w, h, r) {
@@ -432,6 +441,7 @@ export default {
       format: (v) => String(Math.round(v)),
       onInput: (v) => {
         bGroupCount = Math.round(v);
+        bCounts = new Array(bGroupCount + 1).fill(0);
         bAssign = bAssign.map((x) => (x > bGroupCount ? 0 : x));
         bPos.length = 0;
         drawBlocks();
@@ -535,11 +545,15 @@ export default {
 
       drawBlocks();
       bg.update();
-      const counts = blockCounts().slice(1);
+      blockCounts();
       const placed = blocksPlaced();
       const even = blocksEven();
-      const min = Math.min(...counts);
-      const max = Math.max(...counts);
+      let min = Infinity, max = -Infinity;
+      for (let g = 1; g <= bGroupCount; g++) {
+        const n = bCounts[g];
+        if (n < min) min = n;
+        if (n > max) max = n;
+      }
       oBPer.set(even ? String(max) : '—', even);
       oBSpread.set(String(max - min), max === min);
       oBPlaced.set(`${placed} of ${bObjects}`);

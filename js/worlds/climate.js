@@ -3,6 +3,7 @@
    ========================================================================== */
 
 import * as ui from '../ui.js';
+import * as contract from '../contract.js';
 
 const SIGMA = 5.670374419e-8;
 const SOLAR = 1361;      // W/m²
@@ -36,6 +37,48 @@ export default {
       ui.h('span', { class: 'badge' }, ui.h('span', { class: 'led' }), 'Single-layer energy balance'));
     stage.appendChild(badge);
 
+    const paneBalance = ui.h('div', { class: 'stage-pane' });
+    while (stage.firstChild) paneBalance.appendChild(stage.firstChild);
+    stage.appendChild(paneBalance);
+
+    /* ---- second instrument: seasons from tilt and distance ---- */
+    let instrument = 'balance';
+    let tilt = 23.5;
+    let dist = 1;
+    const DEG = Math.PI / 180;
+    let summerT = 0, winterT = 0, contrastT = 0;
+
+    const paneSeasons = ui.h('div', { class: 'stage-pane seasons-pane', style: { display: 'none' } });
+    const seasonHead = ui.h('div', { class: 'hud tl' },
+      ui.h('span', { class: 'badge' }, ui.h('span', { class: 'led' }), 'Seasons · tilt and distance'));
+    const summerLine = ui.h('div', { class: 'season-line' });
+    const winterLine = ui.h('div', { class: 'season-line' });
+    const contrastLine = ui.h('div', { class: 'season-line strong' });
+    const seasonNote = ui.h('div', { class: 'season-note' },
+      'A simple model: tilt sets the swing, distance sets the mean. It shows the mechanism, not a forecast.');
+    paneSeasons.appendChild(seasonHead);
+    paneSeasons.appendChild(summerLine);
+    paneSeasons.appendChild(winterLine);
+    paneSeasons.appendChild(contrastLine);
+    paneSeasons.appendChild(seasonNote);
+    stage.appendChild(paneSeasons);
+
+    function seasonStats() {
+      const base = 15 / Math.sqrt(dist);
+      const swing = 14 * Math.sin(tilt * DEG) / Math.sin(23.5 * DEG);
+      summerT = base + swing;
+      winterT = base - swing;
+      contrastT = summerT - winterT;
+    }
+
+    function paintSeasons() {
+      seasonStats();
+      summerLine.textContent = `Summer mean: ${summerT.toFixed(1)} °C`;
+      winterLine.textContent = `Winter mean: ${winterT.toFixed(1)} °C`;
+      contrastLine.textContent = `Season contrast: ${contrastT.toFixed(1)} °C`;
+    }
+    paintSeasons();
+
     const fit = ui.fitCanvas(canvas);
     const ctx = fit.ctx;
 
@@ -55,6 +98,8 @@ export default {
 
     function draw() {
       const W = fit.size.w, H = fit.size.h;
+      /* A hidden pane measures 1×1; skip it rather than building a negative radius. */
+      if (W < 80 || H < 80) return;
       ctx.setTransform(fit.size.dpr, 0, 0, fit.size.dpr, 0, 0);
       ctx.fillStyle = '#06090e';
       ctx.fillRect(0, 0, W, H);
@@ -210,11 +255,74 @@ export default {
     coach.appendChild(ui.note(
       '<b>T = ((S/4)(1−α) / εσ)^¼</b> — Stefan–Boltzmann, one layer, no ocean, no clouds. A real model adds feedbacks and comes out several degrees warmer for the same forcing. That gap is the honest uncertainty, and it is why the app shows the mechanism rather than a forecast.'));
 
+    /* ---- wrap the balance coach, then add the seasons one ---- */
+    const coachBalance = ui.h('div', { class: 'instrument-pane' });
+    while (coach.firstChild) coachBalance.appendChild(coach.firstChild);
+    const coachSeasons = ui.h('div', { class: 'instrument-pane', style: { display: 'none' } });
+    coach.appendChild(coachBalance);
+    coach.appendChild(coachSeasons);
+
+    const oSummer = ui.obs('Summer mean', '°C');
+    const oWinter = ui.obs('Winter mean', '°C');
+    const oContrast = ui.obs('Season contrast', '°C');
+    const sTilt = ui.slider({
+      label: 'Axial tilt', min: 0, max: 45, step: 0.5, value: tilt,
+      format: (v) => v.toFixed(1) + '°',
+      onInput: (v) => { tilt = v; paintSeasons(); }
+    });
+    const sDist = ui.slider({
+      label: 'Orbital distance', min: 0.9, max: 1.1, step: 0.005, value: dist,
+      format: (v) => v.toFixed(3) + ' AU',
+      onInput: (v) => { dist = v; paintSeasons(); }
+    });
+    const sg = ui.goal(
+      'Make the gap between summer and winter at least <b>30 °C</b>.',
+      () => ({ done: contrastT >= 30, progress: `${contrastT.toFixed(1)} °C contrast` }),
+      'seasons'
+    );
+    coachSeasons.appendChild(ui.h('div', { class: 'kicker' },
+      ui.h('span', { class: 'bar' }), 'Climate · seasons'));
+    coachSeasons.appendChild(ui.h('h2', { class: 'lesson-title' }, 'Tilt makes the seasons, not distance'));
+    coachSeasons.appendChild(ui.h('p', { class: 'lesson-body' },
+      'Move the planet closer and both seasons warm together. Increase the tilt and the two pull apart — contrast is what tilt buys you.'));
+    coachSeasons.appendChild(ui.section('Goal', sg.el));
+    coachSeasons.appendChild(ui.section('Observables', ui.obsList(oSummer, oWinter, oContrast)));
+    coachSeasons.appendChild(ui.section('Knobs', ui.controls(sTilt.el, sDist.el)));
+    coachSeasons.appendChild(ui.h('div', { class: 'hairline' }));
+    coachSeasons.appendChild(ui.note(
+      'The model is deliberately simple: a sinusoidal swing on a distance-scaled mean. It shows why tilt drives contrast and distance drives the average — not a seasonal forecast.'));
+
+    function setInstrument(id) {
+      instrument = id;
+      paneBalance.style.display = id === 'balance' ? '' : 'none';
+      paneSeasons.style.display = id === 'seasons' ? '' : 'none';
+      coachBalance.style.display = id === 'balance' ? '' : 'none';
+      coachSeasons.style.display = id === 'seasons' ? '' : 'none';
+      switchSeg.select(id);
+      contract.selectInstrument(id);
+      if (id === 'seasons') paintSeasons(); else { fit.resize(); draw(); }
+      contract.useGoal(id);
+    }
+    const switchSeg = ui.segmented(
+      [{ id: 'balance', label: 'Balance' }, { id: 'seasons', label: 'Seasons' }],
+      'balance', setInstrument);
+    coach.appendChild(switchSeg);
+    contract.registerInstrument({ id: 'balance', activate: () => setInstrument('balance') });
+    contract.registerInstrument({ id: 'seasons', activate: () => setInstrument('seasons') });
+
     const ro = new ResizeObserver(() => draw());
     ro.observe(canvas);
 
     let acc = 0;
     const stop = ui.addTicker((dt) => {
+      if (instrument === 'seasons') {
+        oSummer.set(summerT.toFixed(1));
+        oWinter.set(winterT.toFixed(1));
+        oContrast.set(contrastT.toFixed(1), contrastT >= 30);
+        sg.update();
+        api.markDone(sg.done);
+        return;
+      }
       const teq = equilibrium();
       T += (teq - T) * (1 - Math.exp(-dt * 1.6));
 

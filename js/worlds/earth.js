@@ -4,8 +4,20 @@
 
 import * as ui from '../ui.js';
 import { registerParam } from '../contract.js';
+import * as contract from '../contract.js';
 
 const DEG = Math.PI / 180;
+const BANDS = 6;
+const BAND_FILLS = Array.from({ length: BANDS }, (_, b) => {
+  const t = b / (BANDS - 1);
+  return `rgb(${Math.round(ui.lerp(24, 104, t))},${Math.round(ui.lerp(38, 142, t))},${Math.round(ui.lerp(46, 132, t))})`;
+});
+
+/* Curated names only; this panel makes no claims about these places. */
+const PLACES = [
+  'France', 'Japan', 'Brazil', 'Egypt', 'India', 'Canada',
+  'Kenya', 'Poland', 'Mexico', 'Sweden', 'Turkey', 'Australia'
+];
 
 const FACTS = {
   'France': {
@@ -229,6 +241,51 @@ export default {
         ui.h('span', { class: 'yr-end' }, '2020')));
     stage.appendChild(timeline);
 
+    /* Wrap the globe surface into one switchable pane. */
+    const panePrimary = ui.h('div', { class: 'stage-pane' });
+    while (stage.firstChild) panePrimary.appendChild(stage.firstChild);
+    stage.appendChild(panePrimary);
+
+    /* ---- second instrument: compare two places ---- */
+    let instrument = 'earth';
+    let placeA = 1;
+    let placeB = 2;
+    const placesOpened = new Set();
+
+    function openPlace(n) {
+      const name = PLACES[n - 1];
+      if (name) placesOpened.add(name);
+    }
+
+    const paneSecond = ui.h('div', { class: 'stage-pane secondary-pane', style: { display: 'none' } });
+    const secA = ui.h('div', { class: 'sec-line' });
+    const secB = ui.h('div', { class: 'sec-line' });
+    const secOpened = ui.h('div', { class: 'sec-line strong' });
+    const secCells = ui.h('div', { class: 'sec-grid' });
+    const cellA = ui.h('div', { class: 'sec-cell' });
+    const cellB = ui.h('div', { class: 'sec-cell' });
+    secCells.appendChild(cellA);
+    secCells.appendChild(cellB);
+    paneSecond.appendChild(secA);
+    paneSecond.appendChild(secB);
+    paneSecond.appendChild(secOpened);
+    paneSecond.appendChild(secCells);
+    stage.appendChild(paneSecond);
+
+    function paintSecond() {
+      const nameA = PLACES[placeA - 1];
+      const nameB = PLACES[placeB - 1];
+      secA.textContent = 'Place A: ' + nameA;
+      secB.textContent = 'Place B: ' + nameB;
+      secOpened.textContent = placesOpened.size + ' of 2 places opened';
+      cellA.textContent = nameA;
+      cellB.textContent = nameB;
+      cellA.classList.toggle('on', placesOpened.has(nameA));
+      cellB.classList.toggle('on', placesOpened.has(nameB));
+    }
+
+    paintSecond();
+
     const fit = ui.fitCanvas(canvas);
     const ctx = fit.ctx;
 
@@ -441,60 +498,56 @@ export default {
         cursor = end;
       }
 
-      /* banded fills */
-      const BANDS = 6;
-      const paths = [];
-      for (let b = 0; b < BANDS; b++) paths.push(new Path2D());
-      const counts = new Array(BANDS).fill(0);
-
-      for (let ci = 0; ci < countries.length; ci++) {
-        if (!visFlags[ci]) continue;
-        const c = countries[ci];
-        let b = Math.floor(zAvg[ci] * BANDS);
-        if (b < 0) b = 0; else if (b >= BANDS) b = BANDS - 1;
-        const p = paths[b];
-        for (let ri = 0; ri < c.ringList.length; ri++) {
-          const r = c.ringList[ri];
-          const off = r.off;
-          p.moveTo(ptsBuf[off * 2], ptsBuf[off * 2 + 1]);
-          for (let i = 1; i < r.len; i++) {
-            const k = off + i;
-            p.lineTo(ptsBuf[k * 2], ptsBuf[k * 2 + 1]);
-          }
-          p.closePath();
-        }
-        counts[b]++;
-      }
-
+      /* banded fills — use the context path directly; a Path2D per band per
+         frame was the largest allocation in this world's ticker. */
       for (let b = 0; b < BANDS; b++) {
-        if (!counts[b]) continue;
-        const t = b / (BANDS - 1);
-        ctx.fillStyle = `rgb(${Math.round(ui.lerp(24, 104, t))},${Math.round(ui.lerp(38, 142, t))},${Math.round(ui.lerp(46, 132, t))})`;
-        ctx.fill(paths[b]);
+        ctx.beginPath();
+        let any = false;
+        for (let ci = 0; ci < countries.length; ci++) {
+          if (!visFlags[ci]) continue;
+          const c = countries[ci];
+          let cb = Math.floor(zAvg[ci] * BANDS);
+          if (cb < 0) cb = 0; else if (cb >= BANDS) cb = BANDS - 1;
+          if (cb !== b) continue;
+          any = true;
+          for (let ri = 0; ri < c.ringList.length; ri++) {
+            const r = c.ringList[ri];
+            const off = r.off;
+            ctx.moveTo(ptsBuf[off * 2], ptsBuf[off * 2 + 1]);
+            for (let i = 1; i < r.len; i++) {
+              const k = off + i;
+              ctx.lineTo(ptsBuf[k * 2], ptsBuf[k * 2 + 1]);
+            }
+            ctx.closePath();
+          }
+        }
+        if (!any) continue;
+        ctx.fillStyle = BAND_FILLS[b];
+        ctx.fill();
         ctx.strokeStyle = 'rgba(4,8,12,0.5)';
         ctx.lineWidth = 0.35;
-        ctx.stroke(paths[b]);
+        ctx.stroke();
       }
 
       /* highlight */
       const hi = selectedIdx >= 0 ? selectedIdx : hoverIdx;
       if (hi >= 0 && visFlags[hi]) {
         const c = countries[hi];
-        const p = new Path2D();
+        ctx.beginPath();
         for (let ri = 0; ri < c.ringList.length; ri++) {
           const r = c.ringList[ri];
-          p.moveTo(ptsBuf[r.off * 2], ptsBuf[r.off * 2 + 1]);
+          ctx.moveTo(ptsBuf[r.off * 2], ptsBuf[r.off * 2 + 1]);
           for (let i = 1; i < r.len; i++) {
             const k = r.off + i;
-            p.lineTo(ptsBuf[k * 2], ptsBuf[k * 2 + 1]);
+            ctx.lineTo(ptsBuf[k * 2], ptsBuf[k * 2 + 1]);
           }
-          p.closePath();
+          ctx.closePath();
         }
         ctx.fillStyle = 'rgba(96,165,250,0.42)';
-        ctx.fill(p);
+        ctx.fill();
         ctx.strokeStyle = 'rgba(160,205,255,0.95)';
         ctx.lineWidth = 1.1;
-        ctx.stroke(p);
+        ctx.stroke();
       }
 
       /* sphere shading */
@@ -579,16 +632,18 @@ export default {
     }
 
     /* ---------- interaction ---------- */
-    canvas.addEventListener('pointerdown', (e) => {
+    /* Named handlers so teardown can remove them explicitly — the stage wipe
+       is the real GC today, but the cleanup should not depend on that. */
+    const onDown = (e) => {
       canvas.setPointerCapture(e.pointerId);
       dragging = true;
       moved = 0;
       lastPtr = { x: e.clientX, y: e.clientY };
       velLon = 0;
       velLat = 0;
-    });
+    };
 
-    canvas.addEventListener('pointermove', (e) => {
+    const onMove = (e) => {
       const rect = canvas.getBoundingClientRect();
       if (dragging && lastPtr) {
         const dx = e.clientX - lastPtr.x;
@@ -617,7 +672,7 @@ export default {
           }
         }
       }
-    });
+    };
 
     const release = (e) => {
       if (!dragging) return;
@@ -628,13 +683,17 @@ export default {
         select(idx);
       }
     };
-    canvas.addEventListener('pointerup', release);
-    canvas.addEventListener('pointercancel', () => { dragging = false; });
-
-    canvas.addEventListener('wheel', (e) => {
+    const onCancel = () => { dragging = false; };
+    const onWheel = (e) => {
       e.preventDefault();
       zoom = ui.clamp(zoom * (1 - e.deltaY * 0.0015), 0.72, 3.4);
-    }, { passive: false });
+    };
+
+    canvas.addEventListener('pointerdown', onDown);
+    canvas.addEventListener('pointermove', onMove);
+    canvas.addEventListener('pointerup', release);
+    canvas.addEventListener('pointercancel', onCancel);
+    canvas.addEventListener('wheel', onWheel, { passive: false });
 
     function setYear(v) {
       year = Math.max(1780, Math.min(2020, Math.round(v)));
@@ -645,7 +704,8 @@ export default {
       renderDossier();
     }
 
-    yearInput.addEventListener('input', () => setYear(parseInt(yearInput.value, 10)));
+    const onYearInput = () => setYear(parseInt(yearInput.value, 10));
+    yearInput.addEventListener('input', onYearInput);
     yearInput.style.setProperty('--pct', '100%');
 
     registerParam({
@@ -679,10 +739,79 @@ export default {
     coach.appendChild(ui.section('Observables', ui.obsList(oSel, oYear, oEvents, oVisited)));
     coach.appendChild(ui.h('div', { class: 'hairline' }));
     coach.appendChild(ui.note(
-      'Geometry: <b>Natural Earth 110m</b> country boundaries, projected live. Borders shown are modern — the full product morphs historical borders from CShapes and OpenHistoricalMap as you scrub. Dated events here are a curated sample.'));
+      'Geometry: <b>Natural Earth 110m</b> country boundaries, projected live. Borders shown are modern — the full product morphs historical borders from CShapes and OpenHistoricalMap as you scrub. Dated events here are a curated sample, as of 2024.'));
+
+    /* ---- wrap the globe coach, then add the comparison one ---- */
+    const coachPrimary = ui.h('div', { class: 'instrument-pane' });
+    while (coach.firstChild) coachPrimary.appendChild(coach.firstChild);
+    const coachSecond = ui.h('div', { class: 'instrument-pane', style: { display: 'none' } });
+    coach.appendChild(coachPrimary);
+    coach.appendChild(coachSecond);
+
+    const oPlaceA = ui.obs('Place A', '');
+    const oPlaceB = ui.obs('Place B', '');
+    const oPlacesOpened = ui.obs('Places opened', '');
+
+    const sPlaceA = ui.slider({
+      label: 'First place', min: 1, max: 12, step: 1, value: placeA,
+      format: (v) => PLACES[Math.round(v) - 1],
+      onInput: (v) => { placeA = Math.round(v); openPlace(placeA); paintSecond(); }
+    });
+    const sPlaceB = ui.slider({
+      label: 'Second place', min: 1, max: 12, step: 1, value: placeB,
+      format: (v) => PLACES[Math.round(v) - 1],
+      onInput: (v) => { placeB = Math.round(v); openPlace(placeB); paintSecond(); }
+    });
+
+    const sg = ui.goal(
+      'Open dossiers for at least <b>two</b> distinct places using the sliders.',
+      () => ({
+        done: placesOpened.size >= 2,
+        progress: `${placesOpened.size} of 2 opened`
+      }),
+      'compare'
+    );
+
+    coachSecond.appendChild(ui.h('div', { class: 'kicker' },
+      ui.h('span', { class: 'bar' }), 'Earth · compare places'));
+    coachSecond.appendChild(ui.h('h2', { class: 'lesson-title' }, 'Two places, side by side'));
+    coachSecond.appendChild(ui.h('p', { class: 'lesson-body' },
+      'Pick two places from the curated list. Each one you choose is marked as opened; bring the count to two distinct places to finish.'));
+    coachSecond.appendChild(ui.section('Goal', sg.el));
+    coachSecond.appendChild(ui.section('Observables', ui.obsList(oPlaceA, oPlaceB, oPlacesOpened)));
+    coachSecond.appendChild(ui.section('Controls', ui.controls(sPlaceA.el, sPlaceB.el)));
+    coachSecond.appendChild(ui.h('div', { class: 'hairline' }));
+    coachSecond.appendChild(ui.note(
+      'This panel reuses the twelve country names from the sample dossiers and nothing else about them. It compares labels, not places.'));
+
+    function setInstrument(id) {
+      instrument = id;
+      panePrimary.style.display = id === 'earth' ? '' : 'none';
+      paneSecond.style.display = id === 'compare' ? '' : 'none';
+      coachPrimary.style.display = id === 'earth' ? '' : 'none';
+      coachSecond.style.display = id === 'compare' ? '' : 'none';
+      switchSeg.select(id);
+      contract.selectInstrument(id);
+      if (id === 'compare') paintSecond(); else { fit.resize(); draw(); }
+      contract.useGoal(id);
+    }
+    const switchSeg = ui.segmented(
+      [{ id: 'earth', label: 'Globe' }, { id: 'compare', label: 'Compare' }],
+      'earth', (id) => setInstrument(id));
+    coach.appendChild(switchSeg);
+    contract.registerInstrument({ id: 'earth', activate: () => setInstrument('earth') });
+    contract.registerInstrument({ id: 'compare', activate: () => setInstrument('compare') });
 
     /* ---------- loop ---------- */
     const stop = ui.addTicker((dt) => {
+      if (instrument !== 'earth') {
+        oPlaceA.set(PLACES[placeA - 1]);
+        oPlaceB.set(PLACES[placeB - 1]);
+        oPlacesOpened.set(String(placesOpened.size));
+        sg.update();
+        api.markDone(sg.done);
+        return;
+      }
       if (!dragging) {
         const decay = Math.exp(-3.2 * dt);
         rotLon += (3.0 + velLon) * dt;
@@ -708,6 +837,12 @@ export default {
 
     return () => {
       stop();
+      canvas.removeEventListener('pointerdown', onDown);
+      canvas.removeEventListener('pointermove', onMove);
+      canvas.removeEventListener('pointerup', release);
+      canvas.removeEventListener('pointercancel', onCancel);
+      canvas.removeEventListener('wheel', onWheel);
+      yearInput.removeEventListener('input', onYearInput);
       fit.destroy();
     };
   }

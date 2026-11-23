@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#05070a" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="description" content="Lumen — a mockup of an interactive learning world for physics, maths, chemistry, art, music and planet Earth." />
+<meta name="description" content="Lumen — an interactive learning world for physics, maths, chemistry, art, music and planet Earth." />
 <title>Lumen — one world of knowledge</title>
 <link rel="stylesheet" href="css/styles.css" />
 </head>
@@ -45,7 +45,7 @@
 
     <nav class="rail" id="rail" aria-label="Subjects"></nav>
 
-    <main class="stage" id="stage">
+    <main class="stage" id="stage" tabindex="0" aria-label="Interactive stage. Use the left and right arrow keys to adjust the main control.">
       <div class="stage-fade" aria-hidden="true"></div>
     </main>
 
@@ -55,6 +55,7 @@
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="sr-live" id="sr-live" aria-live="polite" aria-atomic="true"></div>
 
   <script type="module" src="js/app.js"></script>
 </body>

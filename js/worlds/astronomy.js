@@ -3,6 +3,7 @@
    ========================================================================== */
 
 import * as ui from '../ui.js';
+import * as contract from '../contract.js';
 
 const PLANETS = [
   { name: 'Mercury', a: 0.387, e: 0.206, P: 0.241, c: '#b8bcc6', r: 1.7, ph: 0.6 },
@@ -54,6 +55,59 @@ export default {
 
     const legend = ui.h('div', { class: 'astro-legend' });
     stage.appendChild(legend);
+
+    /* Wrap the orrery into one switchable pane. */
+    const panePrimary = ui.h('div', { class: 'stage-pane' });
+    while (stage.firstChild) panePrimary.appendChild(stage.firstChild);
+    stage.appendChild(panePrimary);
+
+    /* ---- second instrument: the moon ---- */
+    let instrument = 'astro';
+    let phase = 0;
+    let distance = 1;
+
+    const paneSecond = ui.h('div', { class: 'stage-pane secondary-pane', style: { display: 'none' } });
+    const secIllum = ui.h('div', { class: 'sec-line' });
+    const secDay = ui.h('div', { class: 'sec-line' });
+    const secWax = ui.h('div', { class: 'sec-line strong' });
+    const secCells = ui.h('div', { class: 'sec-grid' });
+    const moonDisc = ui.h('div', { class: 'sec-cell moon-disc' });
+    const litChip = ui.h('span', { class: 'sec-cell lit' }, 'lit');
+    const cellDist = ui.h('div', { class: 'sec-cell' });
+    secCells.appendChild(moonDisc);
+    secCells.appendChild(litChip);
+    secCells.appendChild(cellDist);
+    paneSecond.appendChild(secIllum);
+    paneSecond.appendChild(secDay);
+    paneSecond.appendChild(secWax);
+    paneSecond.appendChild(secCells);
+    stage.appendChild(paneSecond);
+
+    function illum() {
+      return (1 - Math.cos(phase * Math.PI / 180)) / 2;
+    }
+
+    function cycleDay() {
+      return (phase / 360) * 29.5;
+    }
+
+    function paintSecond() {
+      const f = illum();
+      const pct = Math.round(f * 100);
+      secIllum.textContent = 'Illuminated fraction: ' + f.toFixed(3);
+      secDay.textContent = 'Cycle day: ' + cycleDay().toFixed(1);
+      secWax.textContent = phase < 180 ? 'Waxing' : 'Waning';
+      moonDisc.style.width = '72px';
+      moonDisc.style.height = '72px';
+      moonDisc.style.padding = '0';
+      moonDisc.style.borderRadius = '50%';
+      moonDisc.style.background =
+        `linear-gradient(90deg, #f5f3e7 0%, #f5f3e7 ${pct}%, #10141b ${pct}%, #10141b 100%)`;
+      litChip.classList.toggle('on', f >= 0.99);
+      cellDist.textContent = distance.toFixed(3) + '×';
+    }
+
+    paintSecond();
 
     const fit = ui.fitCanvas(canvas);
     const ctx = fit.ctx;
@@ -188,7 +242,68 @@ export default {
     )));
     coach.appendChild(ui.h('div', { class: 'hairline' }));
     coach.appendChild(ui.note(
-      'Positions come from real orbital elements, solved through Kepler’s equation each frame — elliptical, not circular. The default view compresses distance by <b>√a</b> so the inner planets stay visible; that is a lie, and the toggle removes it.'));
+      'Positions come from real orbital elements, solved through Kepler’s equation each frame — elliptical, not circular. Sample orbital elements, epoch 2024. The default view compresses distance by <b>√a</b> so the inner planets stay visible; that is a lie, and the toggle removes it.'));
+
+    /* ---- wrap the orrery coach, then add the moon one ---- */
+    const coachPrimary = ui.h('div', { class: 'instrument-pane' });
+    while (coach.firstChild) coachPrimary.appendChild(coach.firstChild);
+    const coachSecond = ui.h('div', { class: 'instrument-pane', style: { display: 'none' } });
+    coach.appendChild(coachPrimary);
+    coach.appendChild(coachSecond);
+
+    const oIllum = ui.obs('Illuminated fraction', '');
+    const oDay = ui.obs('Cycle day', 'd');
+    const oWax = ui.obs('Waxing', '');
+
+    const sPhase = ui.slider({
+      label: 'Phase angle', min: 0, max: 360, step: 5, value: phase,
+      format: (v) => `${Math.round(v)}°`,
+      onInput: (v) => { phase = Math.round(v); paintSecond(); }
+    });
+    const sDist = ui.slider({
+      label: 'Moon distance', min: 0.9, max: 1.1, step: 0.005, value: distance,
+      format: (v) => v.toFixed(3) + '×',
+      onInput: (v) => { distance = v; paintSecond(); }
+    });
+
+    const mg = ui.goal(
+      'Bring the Moon to a full disc — at least <b>0.99</b> illuminated.',
+      () => ({
+        done: illum() >= 0.99,
+        progress: illum().toFixed(3) + ' illuminated'
+      }),
+      'moon'
+    );
+
+    coachSecond.appendChild(ui.h('div', { class: 'kicker' },
+      ui.h('span', { class: 'bar' }), 'Astronomy · lunar phases'));
+    coachSecond.appendChild(ui.h('h2', { class: 'lesson-title' }, 'The phase is an angle you can turn'));
+    coachSecond.appendChild(ui.h('p', { class: 'lesson-body' },
+      'Sweep the phase angle and watch the illuminated fraction, the place in the cycle and the waxing flag change together. Aim for a fully lit disc.'));
+    coachSecond.appendChild(ui.section('Goal', mg.el));
+    coachSecond.appendChild(ui.section('Observables', ui.obsList(oIllum, oDay, oWax)));
+    coachSecond.appendChild(ui.section('Controls', ui.controls(sPhase.el, sDist.el)));
+    coachSecond.appendChild(ui.h('div', { class: 'hairline' }));
+    coachSecond.appendChild(ui.note(
+      'The fraction follows from the phase angle alone; the disc is a schematic of that number, not a rendered lunar surface. The 29.5-day cycle is the scale used here, and the distance slider is a relative factor with no unit attached.'));
+
+    function setInstrument(id) {
+      instrument = id;
+      panePrimary.style.display = id === 'astro' ? '' : 'none';
+      paneSecond.style.display = id === 'moon' ? '' : 'none';
+      coachPrimary.style.display = id === 'astro' ? '' : 'none';
+      coachSecond.style.display = id === 'moon' ? '' : 'none';
+      switchSeg.select(id);
+      contract.selectInstrument(id);
+      if (id === 'moon') paintSecond(); else { fit.resize(); draw(); }
+      contract.useGoal(id);
+    }
+    const switchSeg = ui.segmented(
+      [{ id: 'astro', label: 'Orbits' }, { id: 'moon', label: 'Moon' }],
+      'astro', (id) => setInstrument(id));
+    coach.appendChild(switchSeg);
+    contract.registerInstrument({ id: 'astro', activate: () => setInstrument('astro') });
+    contract.registerInstrument({ id: 'moon', activate: () => setInstrument('moon') });
 
     buildLegend();
 
@@ -196,6 +311,14 @@ export default {
     ro.observe(canvas);
 
     const stop = ui.addTicker((dt) => {
+      if (instrument !== 'astro') {
+        oIllum.set(illum().toFixed(3));
+        oDay.set(cycleDay().toFixed(1));
+        oWax.set(phase < 180 ? '1' : '0');
+        mg.update();
+        api.markDone(mg.done);
+        return;
+      }
       years += dt * speed;
       draw();
       oYears.set(years.toFixed(1));

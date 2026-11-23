@@ -3,6 +3,7 @@
    ========================================================================== */
 
 import * as ui from '../ui.js';
+import * as contract from '../contract.js';
 
 /* symbol, name, Z, category, atomic mass, Pauling electronegativity (null = n/a) */
 const ELEMENTS = [
@@ -161,6 +162,10 @@ function ramp(t, from, to) {
   return `rgb(${Math.round(ui.lerp(a.r, b.r, t))},${Math.round(ui.lerp(a.g, b.g, t))},${Math.round(ui.lerp(a.b, b.b, t))})`;
 }
 
+/* Cached once at load: the goal compares against this every tick, so the
+   spread-argument Math.max must never run inside the per-frame path. */
+const MAX_EN = Math.max(...ELEMENTS.filter((e) => e[5] != null).map((e) => e[5]));
+
 export default {
   id: 'chem',
   name: 'Chemistry',
@@ -179,10 +184,64 @@ export default {
     let sZ = null;
     const visited = new Set();
 
+    /* Strongest electronegativity the learner has actually opened — the goal
+       progress reflects exploration, not the table's global maximum. */
+    let strongestSeen = null;
+
     const wrap = ui.h('div', { class: 'pt-wrap' });
     const grid = ui.h('div', { class: 'pt-grid', style: { minHeight: '330px' } });
     wrap.appendChild(grid);
     stage.appendChild(wrap);
+
+    /* Wrap the periodic table into one switchable pane. */
+    const panePrimary = ui.h('div', { class: 'stage-pane' });
+    while (stage.firstChild) panePrimary.appendChild(stage.firstChild);
+    stage.appendChild(panePrimary);
+
+    /* ---- second instrument: isotopes ---- */
+    let instrument = 'chem';
+    let neutrons = 6;
+
+    const paneSecond = ui.h('div', { class: 'stage-pane secondary-pane', style: { display: 'none' } });
+    const isoHead = ui.h('div', { class: 'hud tl' },
+      ui.h('span', { class: 'badge' }, ui.h('span', { class: 'led' }), 'Isotopes · nucleus builder'));
+    const isoCounts = ui.h('div', { class: 'sec-line' });
+    const isoStability = ui.h('div', { class: 'sec-line strong' });
+    const nucleusGrid = ui.h('div', { class: 'sec-grid' });
+    paneSecond.appendChild(isoHead);
+    paneSecond.appendChild(isoCounts);
+    paneSecond.appendChild(isoStability);
+    paneSecond.appendChild(nucleusGrid);
+    stage.appendChild(paneSecond);
+
+    function computeSecond() {
+      const Z = Math.max(1, selected || 1);
+      const N = neutrons;
+      const mass = Z + N;
+      const target = Z <= 20 ? 1 : 1.5;
+      const stability = ui.clamp(1 - Math.abs(N / Z - target), 0, 1);
+      return { Z, N, mass, stability };
+    }
+
+    function paintSecond() {
+      const { Z, N, stability } = computeSecond();
+      isoCounts.textContent = `Protons ${Z} · Neutrons ${N}`;
+      isoStability.textContent = `Stability ${stability.toFixed(2)}`;
+      nucleusGrid.innerHTML = '';
+      const pShown = Math.min(Z, 24);
+      const nShown = Math.min(N, 48);
+      for (let i = 0; i < pShown; i++) {
+        nucleusGrid.appendChild(ui.h('div', { class: 'sec-cell', style: { borderColor: '#34d399' } }, 'p'));
+      }
+      for (let i = 0; i < nShown; i++) {
+        nucleusGrid.appendChild(ui.h('div', { class: 'sec-cell' }, 'n'));
+      }
+      if (Z > pShown || N > nShown) {
+        nucleusGrid.appendChild(ui.h('div', { class: 'sec-cell' }, `+${Z - pShown} p · +${N - nShown} n`));
+      }
+    }
+
+    paintSecond();
 
     const legend = ui.h('div', { class: 'legend' });
     wrap.appendChild(legend);
@@ -258,6 +317,8 @@ export default {
         cell.classList.toggle('dim', z !== null && cz !== z);
       }
       visited.add(z);
+      const en = cells.get(z)?._data?.en;
+      if (en != null && (strongestSeen === null || en > strongestSeen)) strongestSeen = en;
       drawCard();
     }
 
@@ -269,7 +330,7 @@ export default {
       const el = cell._data;
       if (!card) {
         card = ui.h('div', { class: 'el-card' });
-        stage.appendChild(card);
+        panePrimary.appendChild(card);
       }
       card.innerHTML = '';
       card.appendChild(ui.h('div', { class: 'big' },
@@ -340,9 +401,12 @@ export default {
       'Find the element that pulls electrons hardest of all.',
       () => {
         const en = cells.get(selected)?._data?.en;
-        const best = Math.max(...ELEMENTS.filter((e) => e[5] != null).map((e) => e[5]));
-        return { done: en === best, progress: `${visited.size} opened · strongest so far ${best.toFixed(2)}` };
-      }
+        return {
+          done: en === MAX_EN,
+          progress: `${visited.size} opened · strongest seen ${strongestSeen === null ? '—' : strongestSeen.toFixed(2)}`
+        };
+      },
+      'chem'
     );
 
     sZ = ui.slider({
@@ -364,20 +428,85 @@ export default {
     coach.appendChild(ui.section('Colour the table by', seg));
     coach.appendChild(ui.h('div', { class: 'hairline' }));
     coach.appendChild(ui.note(
-      'Mockup dataset: <b>118 elements</b>, masses and Pauling electronegativities. Tap any element. The full product pulls live from PubChem and links each element to the minerals, pigments and molecules it appears in.'));
+      'Mockup dataset: <b>118 elements</b>, masses and Pauling electronegativities. Fixed sample values as of 2024. Tap any element. The full product pulls live from PubChem and links each element to the minerals, pigments and molecules it appears in.'));
+
+    /* ---- wrap the chemistry coach, then add the isotopes one ---- */
+    const coachPrimary = ui.h('div', { class: 'instrument-pane' });
+    while (coach.firstChild) coachPrimary.appendChild(coach.firstChild);
+    const coachSecond = ui.h('div', { class: 'instrument-pane', style: { display: 'none' } });
+    coach.appendChild(coachPrimary);
+    coach.appendChild(coachSecond);
+
+    const oMass = ui.obs('Mass number', '');
+    const oNeutronCount = ui.obs('Neutron count', '');
+    const oStability = ui.obs('Stability', '');
+
+    const sNeutrons = ui.slider({
+      label: 'Neutrons', min: 0, max: 150, step: 1, value: neutrons,
+      format: (v) => String(Math.round(v)),
+      onInput: (v) => { neutrons = Math.round(v); paintSecond(); }
+    });
+
+    const sg = ui.goal(
+      'Build a nucleus with stability of at least <b>0.8</b>.',
+      () => {
+        const s = computeSecond().stability;
+        return { done: s >= 0.8, progress: `Stability ${s.toFixed(2)}` };
+      },
+      'isotopes'
+    );
+
+    coachSecond.appendChild(ui.h('div', { class: 'kicker' },
+      ui.h('span', { class: 'bar' }), 'Chemistry · isotopes'));
+    coachSecond.appendChild(ui.h('h2', { class: 'lesson-title' }, 'Same element, different nucleus'));
+    coachSecond.appendChild(ui.h('p', { class: 'lesson-body' },
+      'The atomic number fixes the protons. Add neutrons and the mass number climbs, but the balance between the two decides how stable the nucleus is. Aim for the band where stability stays high.'));
+    coachSecond.appendChild(ui.section('Goal', sg.el));
+    coachSecond.appendChild(ui.section('Observables', ui.obsList(oMass, oNeutronCount, oStability)));
+    coachSecond.appendChild(ui.section('Controls', ui.controls(sNeutrons.el)));
+    coachSecond.appendChild(ui.h('div', { class: 'hairline' }));
+    coachSecond.appendChild(ui.note(
+      'This is a teaching rule, not a nuclear model: stability is <b>1 − |N/Z − target|</b>, with target 1 up to Z = 20 and 1.5 above it. Real isotope stability also depends on shell structure and pairing, so the score is a guide, not a prediction.'));
+
+    function setInstrument(id) {
+      instrument = id;
+      panePrimary.style.display = id === 'chem' ? '' : 'none';
+      paneSecond.style.display = id === 'isotopes' ? '' : 'none';
+      coachPrimary.style.display = id === 'chem' ? '' : 'none';
+      coachSecond.style.display = id === 'isotopes' ? '' : 'none';
+      switchSeg.select(id);
+      contract.selectInstrument(id);
+      if (id === 'isotopes') paintSecond();
+      contract.useGoal(id);
+    }
+    const switchSeg = ui.segmented(
+      [{ id: 'chem', label: 'Periodic table' }, { id: 'isotopes', label: 'Isotopes' }],
+      'chem', setInstrument);
+    coach.appendChild(switchSeg);
+    contract.registerInstrument({ id: 'chem', activate: () => setInstrument('chem') });
+    contract.registerInstrument({ id: 'isotopes', activate: () => setInstrument('isotopes') });
 
     buildTable();
     paintMode();
     select(6);
 
     const timer = setInterval(() => {
-      const el = selected ? cells.get(selected)._data : null;
-      oSel.set(el ? el.sym : '—', !!el);
-      oCat.set(el ? CAT_LABEL[el.cat] : '—');
-      oEn.set(el && el.en != null ? el.en.toFixed(2) : '—');
-      oSeen.set(String(visited.size));
-      g.update();
-      api.markDone(g.done);
+      if (instrument === 'chem') {
+        const el = selected ? cells.get(selected)._data : null;
+        oSel.set(el ? el.sym : '—', !!el);
+        oCat.set(el ? CAT_LABEL[el.cat] : '—');
+        oEn.set(el && el.en != null ? el.en.toFixed(2) : '—');
+        oSeen.set(String(visited.size));
+        g.update();
+        api.markDone(g.done);
+        return;
+      }
+      const { mass, stability } = computeSecond();
+      oMass.set(String(mass));
+      oNeutronCount.set(String(neutrons));
+      oStability.set(stability.toFixed(2), stability >= 0.8);
+      sg.update();
+      api.markDone(sg.done);
     }, 220);
 
     return () => {

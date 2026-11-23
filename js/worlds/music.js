@@ -3,6 +3,7 @@
    ========================================================================== */
 
 import * as ui from '../ui.js';
+import * as contract from '../contract.js';
 
 const WHITE = [
   ['C4', 60], ['D4', 62], ['E4', 64], ['F4', 65], ['G4', 67], ['A4', 69], ['B4', 71],
@@ -164,6 +165,56 @@ export default {
     wrap.appendChild(keysWrap);
     stage.appendChild(wrap);
 
+    /* Wrap the piano into one switchable pane. */
+    const panePrimary = ui.h('div', { class: 'stage-pane' });
+    while (stage.firstChild) panePrimary.appendChild(stage.firstChild);
+    stage.appendChild(panePrimary);
+
+    /* ---- second instrument: tuning ---- */
+    let instrument = 'music';
+    let noteFreq = 445;
+    let reference = 440;
+
+    const paneSecond = ui.h('div', { class: 'stage-pane secondary-pane', style: { display: 'none' } });
+    const tuneHead = ui.h('div', { class: 'hud tl' },
+      ui.h('span', { class: 'badge' }, ui.h('span', { class: 'led' }), 'Tuning · two frequencies'));
+    const tuneLine = ui.h('div', { class: 'sec-line' });
+    const matchLine = ui.h('div', { class: 'sec-line strong' });
+    const tuneGrid = ui.h('div', { class: 'sec-grid' });
+    const cellNote = ui.h('div', { class: 'sec-cell' });
+    const cellRef = ui.h('div', { class: 'sec-cell' });
+    tuneGrid.appendChild(cellNote);
+    tuneGrid.appendChild(cellRef);
+    paneSecond.appendChild(tuneHead);
+    paneSecond.appendChild(tuneLine);
+    paneSecond.appendChild(matchLine);
+    paneSecond.appendChild(tuneGrid);
+    stage.appendChild(paneSecond);
+
+    function computeTuning() {
+      const cents = 1200 * Math.log2(noteFreq / reference);
+      const absCents = Math.abs(cents);
+      return {
+        cents,
+        beat: Math.abs(noteFreq - reference),
+        match: absCents <= 5 ? 1 : 0
+      };
+    }
+
+    function paintSecond() {
+      const { cents, match } = computeTuning();
+      cellNote.textContent = `Note ${noteFreq} Hz`;
+      cellRef.textContent = `Reference ${reference} Hz`;
+      tuneLine.textContent = `Beat rate ${Math.abs(noteFreq - reference)} Hz · ${cents.toFixed(1)} cents`;
+      matchLine.textContent = match
+        ? 'In tune · within five cents'
+        : `${cents > 0 ? 'Sharp' : 'Flat'} by ${Math.abs(cents).toFixed(1)} cents`;
+      cellNote.classList.toggle('on', !!match);
+      cellRef.classList.toggle('on', !!match);
+    }
+
+    paintSecond();
+
     const fit = ui.fitCanvas(waveCanvas);
     const ctx = fit.ctx;
 
@@ -296,7 +347,8 @@ export default {
       () => ({
         done: practiceDone,
         progress: practiceDone ? 'Clean run.' : `${practiceIdx} of ${PHRASE.length} notes`
-      })
+      }),
+      'music'
     );
 
     const sTempo = ui.slider({
@@ -326,17 +378,87 @@ export default {
     coach.appendChild(ui.note(
       'In the real app the same overlay sits on a song you chose: MusicXML from open scores, <b>wait-for-you</b> mode, per-note pitch and timing from the microphone. A phone on the piano is the whole trick.'));
 
+    /* ---- wrap the music coach, then add the tuning one ---- */
+    const coachPrimary = ui.h('div', { class: 'instrument-pane' });
+    while (coach.firstChild) coachPrimary.appendChild(coach.firstChild);
+    const coachSecond = ui.h('div', { class: 'instrument-pane', style: { display: 'none' } });
+    coach.appendChild(coachPrimary);
+    coach.appendChild(coachSecond);
+
+    const oCents = ui.obs('Cents off', '');
+    const oBeat = ui.obs('Beat rate', 'Hz');
+    const oMatch = ui.obs('Pitch match', '');
+
+    const sFreq = ui.slider({
+      label: 'Note frequency', min: 220, max: 880, step: 1, value: noteFreq,
+      format: (v) => `${Math.round(v)} Hz`,
+      onInput: (v) => { noteFreq = Math.round(v); paintSecond(); }
+    });
+    const sRef = ui.slider({
+      label: 'Reference', min: 400, max: 500, step: 1, value: reference,
+      format: (v) => `${Math.round(v)} Hz`,
+      onInput: (v) => { reference = Math.round(v); paintSecond(); }
+    });
+
+    const sg = ui.goal(
+      'Bring the note within <b>five cents</b> of the reference.',
+      () => {
+        const cents = computeTuning().cents;
+        return { done: Math.abs(cents) <= 5, progress: `${cents.toFixed(1)} cents off` };
+      },
+      'tuning'
+    );
+
+    coachSecond.appendChild(ui.h('div', { class: 'kicker' },
+      ui.h('span', { class: 'bar' }), 'Music · tuning'));
+    coachSecond.appendChild(ui.h('h2', { class: 'lesson-title' }, 'Two notes either agree or they beat'));
+    coachSecond.appendChild(ui.h('p', { class: 'lesson-body' },
+      'Set a reference pitch, then slide a note toward it. The gap in hertz is the beat rate you would hear; the gap in cents is the same distance on a musical scale. Within five cents the two read as one pitch.'));
+    coachSecond.appendChild(ui.section('Goal', sg.el));
+    coachSecond.appendChild(ui.section('Observables', ui.obsList(oCents, oBeat, oMatch)));
+    coachSecond.appendChild(ui.section('Controls', ui.controls(sFreq.el, sRef.el)));
+    coachSecond.appendChild(ui.h('div', { class: 'hairline' }));
+    coachSecond.appendChild(ui.note(
+      'Cents are <b>1200 × log₂(f / f₀)</b> and the beat rate is <b>|f − f₀|</b> in hertz — both are definitions, not measurements of a real instrument. The cells show the numbers only; no sound is generated here, so this reads as arithmetic rather than a proof of hearing.'));
+
+    function setInstrument(id) {
+      instrument = id;
+      panePrimary.style.display = id === 'music' ? '' : 'none';
+      paneSecond.style.display = id === 'tuning' ? '' : 'none';
+      coachPrimary.style.display = id === 'music' ? '' : 'none';
+      coachSecond.style.display = id === 'tuning' ? '' : 'none';
+      switchSeg.select(id);
+      contract.selectInstrument(id);
+      if (id === 'tuning') paintSecond(); else { fit.resize(); drawWave(0); }
+      contract.useGoal(id);
+    }
+    const switchSeg = ui.segmented(
+      [{ id: 'music', label: 'Piano' }, { id: 'tuning', label: 'Tuning' }],
+      'music', setInstrument);
+    coach.appendChild(switchSeg);
+    contract.registerInstrument({ id: 'music', activate: () => setInstrument('music') });
+    contract.registerInstrument({ id: 'tuning', activate: () => setInstrument('tuning') });
+
     fit.resize();
 
     paintPractice();
 
     const stop = ui.addTicker((dt, ts) => {
-      drawWave(ts);
-      oNotes.set(String(notesPlayed));
-      oLast.set(lastNote, lastNote !== '—');
-      oPhrase.set(practiceDone ? 'complete' : `${practiceIdx}/${PHRASE.length}`, practiceDone);
-      g.update();
-      api.markDone(g.done);
+      if (instrument === 'music') {
+        drawWave(ts);
+        oNotes.set(String(notesPlayed));
+        oLast.set(lastNote, lastNote !== '—');
+        oPhrase.set(practiceDone ? 'complete' : `${practiceIdx}/${PHRASE.length}`, practiceDone);
+        g.update();
+        api.markDone(g.done);
+        return;
+      }
+      const { cents, beat, match } = computeTuning();
+      oCents.set(cents.toFixed(1));
+      oBeat.set(beat.toFixed(1));
+      oMatch.set(String(match), !!match);
+      sg.update();
+      api.markDone(sg.done);
     });
 
     return () => {

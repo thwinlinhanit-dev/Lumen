@@ -3,6 +3,7 @@
    ========================================================================== */
 
 import * as ui from '../ui.js';
+import * as contract from '../contract.js';
 
 const PHRASES = [
   {
@@ -67,6 +68,54 @@ export default {
     wrap.appendChild(pool);
     wrap.appendChild(bar);
     stage.appendChild(wrap);
+
+    /* Wrap the sentence builder into one switchable pane. */
+    const panePrimary = ui.h('div', { class: 'stage-pane' });
+    while (stage.firstChild) panePrimary.appendChild(stage.firstChild);
+    stage.appendChild(panePrimary);
+
+    /* ---- second instrument: reading pace ---- */
+    let instrument = 'language';
+    let wpm = 180;
+    let words = 100;
+
+    const paneSecond = ui.h('div', { class: 'stage-pane secondary-pane', style: { display: 'none' } });
+    const secWpm = ui.h('div', { class: 'sec-line' });
+    const secWords = ui.h('div', { class: 'sec-line' });
+    const secSeconds = ui.h('div', { class: 'sec-line strong' });
+    const secCells = ui.h('div', { class: 'sec-grid' });
+    const cellWpm = ui.h('div', { class: 'sec-cell' });
+    const cellWords = ui.h('div', { class: 'sec-cell' });
+    const cellSeconds = ui.h('div', { class: 'sec-cell' });
+    secCells.appendChild(cellWpm);
+    secCells.appendChild(cellWords);
+    secCells.appendChild(cellSeconds);
+    paneSecond.appendChild(secWpm);
+    paneSecond.appendChild(secWords);
+    paneSecond.appendChild(secSeconds);
+    paneSecond.appendChild(secCells);
+    stage.appendChild(paneSecond);
+
+    function readingSeconds() {
+      return (words / wpm) * 60;
+    }
+
+    function paceBand() {
+      if (wpm < 150) return 0;
+      if (wpm < 230) return 1;
+      return 2;
+    }
+
+    function paintSecond() {
+      secWpm.textContent = 'Words per minute: ' + wpm;
+      secWords.textContent = 'Passage words: ' + words;
+      secSeconds.textContent = readingSeconds().toFixed(1) + ' seconds to read';
+      cellWpm.textContent = wpm + ' wpm';
+      cellWords.textContent = words + ' words';
+      cellSeconds.textContent = readingSeconds().toFixed(1) + ' s';
+    }
+
+    paintSecond();
 
     const listenBtn = ui.button('Listen', () => speak(PHRASES[idx].es), 'accent');
     const nextBtn = ui.button('Next', () => { idx = (idx + 1) % PHRASES.length; load(); }, 'ghost');
@@ -199,9 +248,81 @@ export default {
     coach.appendChild(ui.note(
       'Speech uses the device’s own Spanish voice. In the full app this pairs with per-phoneme scoring from the microphone — the thing no competitor does well — and with graded reading drawn from the countries, art and music you are already studying.'));
 
+    /* ---- wrap the sentence coach, then add the pace one ---- */
+    const coachPrimary = ui.h('div', { class: 'instrument-pane' });
+    while (coach.firstChild) coachPrimary.appendChild(coach.firstChild);
+    const coachSecond = ui.h('div', { class: 'instrument-pane', style: { display: 'none' } });
+    coach.appendChild(coachPrimary);
+    coach.appendChild(coachSecond);
+
+    const oReadSec = ui.obs('Reading seconds', 's');
+    /* Same label as the sentence pane's word counter, so it stays registered
+       under one key whichever instrument is active. */
+    const oWordsPaced = ui.obs('Words placed', '');
+    const oPaceBand = ui.obs('Pace band', '');
+
+    const sWpm = ui.slider({
+      label: 'Words per minute', min: 60, max: 300, step: 5, value: wpm,
+      format: (v) => `${Math.round(v)} wpm`,
+      onInput: (v) => { wpm = Math.round(v); paintSecond(); }
+    });
+    const sWords = ui.slider({
+      label: 'Passage words', min: 20, max: 200, step: 10, value: words,
+      format: (v) => `${Math.round(v)} words`,
+      onInput: (v) => { words = Math.round(v); paintSecond(); }
+    });
+
+    const pg = ui.goal(
+      'Read the passage in <b>60</b> seconds or less.',
+      () => ({
+        done: readingSeconds() <= 60,
+        progress: readingSeconds().toFixed(1) + ' s'
+      }),
+      'pace'
+    );
+
+    coachSecond.appendChild(ui.h('div', { class: 'kicker' },
+      ui.h('span', { class: 'bar' }), 'Language · reading pace'));
+    coachSecond.appendChild(ui.h('h2', { class: 'lesson-title' }, 'Pace is a number you can set'));
+    coachSecond.appendChild(ui.h('p', { class: 'lesson-body' },
+      'Choose a reading speed and a passage length; the seconds to read follow from the two. Move either slider until a whole passage fits in a minute.'));
+    coachSecond.appendChild(ui.section('Goal', pg.el));
+    coachSecond.appendChild(ui.section('Observables', ui.obsList(oReadSec, oWordsPaced, oPaceBand)));
+    coachSecond.appendChild(ui.section('Controls', ui.controls(sWpm.el, sWords.el)));
+    coachSecond.appendChild(ui.h('div', { class: 'hairline' }));
+    coachSecond.appendChild(ui.note(
+      'Seconds are passage words divided by words per minute, times sixty. The three pace bands are display ranges chosen for this panel, not a reading standard.'));
+
+    function setInstrument(id) {
+      instrument = id;
+      panePrimary.style.display = id === 'language' ? '' : 'none';
+      paneSecond.style.display = id === 'pace' ? '' : 'none';
+      coachPrimary.style.display = id === 'language' ? '' : 'none';
+      coachSecond.style.display = id === 'pace' ? '' : 'none';
+      switchSeg.select(id);
+      contract.selectInstrument(id);
+      if (id === 'pace') paintSecond();
+      contract.useGoal(id);
+    }
+    const switchSeg = ui.segmented(
+      [{ id: 'language', label: 'Sentences' }, { id: 'pace', label: 'Pace' }],
+      'language', (id) => setInstrument(id));
+    coach.appendChild(switchSeg);
+    contract.registerInstrument({ id: 'language', activate: () => setInstrument('language') });
+    contract.registerInstrument({ id: 'pace', activate: () => setInstrument('pace') });
+
     load();
 
     const timer = setInterval(() => {
+      if (instrument !== 'language') {
+        oReadSec.set(readingSeconds().toFixed(1));
+        oWordsPaced.set(String(words));
+        oPaceBand.set(String(paceBand()));
+        pg.update();
+        api.markDone(pg.done);
+        return;
+      }
+      oWordsPaced.set(String(placed));
       oSolved.set(String(solved), solved > 0);
       oPerfect.set(String(perfect), perfect >= 3);
       oMistakes.set(String(mistakes));
